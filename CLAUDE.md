@@ -19,14 +19,26 @@
 최종 리뷰(opus)에서 나온 Important 1건(hall_of_fame FK cascade 누락 → `deleteGame` FK 위반)은
 마이그레이션 `0004_hall_of_fame_cascade.sql`로 수정 완료.
 
-### ⚠️ 남은 일: 라이브 검증만 (env 필요, 아직 미실행)
-코드는 완료됐지만 아래 라이브 게이트는 아직 안 돌렸음. `.env.local` + `SUPABASE_ACCESS_TOKEN` 준비 후 실행:
-1. `npx supabase link --project-ref usqxzkggksqoceileqbt`
-2. `npx supabase db push`  ← **0002·0003·0004 마이그레이션 적용. 특히 0004 적용 전까지 라이브에서
-   명예의 전당에 오른 게임 삭제(`deleteGame`)는 여전히 FK 위반으로 실패함.**
-3. `npx supabase db query --linked --file supabase/verify/rollover_check.sql`  ← `NOTICE: PASS` 기대
-4. 대시보드에서 `pg_cron` 활성 + `midnight-rollover` 잡 확인
-5. `npm run dev` → `/` 및 `/admin` 브라우저 E2E (투표/채팅/인정/정렬/명예의전당, 로그인/문제 생성/삭제)
+### ✅ 라이브 검증 완료 (2026-07-14, 운영 프로젝트 usqxzkggksqoceileqbt)
+DB 측 게이트 전부 통과. 실행 결과:
+1. ✅ `supabase link` — access token으로 링크 성공 (비밀번호 없이 Management API 연결).
+2. ✅ `supabase db push` — 0003·0004 원격 적용 완료 (0001·0002는 이미 적용돼 있었음).
+   `migration list --linked`에서 0001~0004 전부 remote 확인.
+3. ✅ `db query --linked --file supabase/verify/rollover_check.sql` — 예외 없이 exit 0 = PASS.
+   (Management API는 `RAISE NOTICE`를 반환 안 하므로, 의도적 `raise exception` 테스트로 실패 시
+   exit 1 + 에러 표면화됨을 검증 → exit 0 이 곧 모든 어서션 통과임을 확인. 전체 `begin;…rollback;`
+   이라 라이브 데이터 미변경.)
+4. ✅ `cron.job`에 `midnight-rollover` 존재, `active=true`, schedule `0 15 * * *` (= KST 자정).
+   `hall_of_fame` 두 FK 모두 `confdeltype='c'`(cascade) 확인 → 라이브에서 `deleteGame` 안전.
+   `supabase_realtime` publication에 `hall_of_fame` 포함(0003) 확인.
+5. ✅ HTTP 스모크: `npm run dev`(Next 16) → `/` 200(헤더 렌더), `/admin` 미인증 307→`/admin/login`
+   (미들웨어 fail-closed 동작), `/admin/login` 200. dev 로그 런타임 에러 없음.
+   ⚠️ 남은 **수동 브라우저 E2E** (사람이 직접): 투표/채팅/인정/정렬/명예의전당 인터랙션,
+   `/admin` 로그인(비번 `.env.local`의 `ADMIN_PASSWORD`)→문제 생성(scheduled)→삭제.
+   서버 사이드/DB는 검증됐고, 남은 건 실제 클릭 인터랙션 확인뿐.
+
+주의: Next 16이 `middleware` 파일 컨벤션을 deprecated(→`proxy`로 리네임 권장)로 경고. 지금 동작엔 문제
+없으나(리다이렉트 정상) 추후 `src/middleware.ts`→`src/proxy.ts` 리네임 고려.
 
 ### 이월된 minor/plan-mandated 항목 (병합 차단 아님, 상세는 `.superpowers/sdd/progress.md`)
 관리자 인증 하드닝(비상수시간 비교·정적 세션 쿠키·rate-limit 없음, spec §6 MVP 의도),
