@@ -9,16 +9,28 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
-## 현재 진행 상황 (2026-07-13 기준)
+## 현재 진행 상황 (2026-07-13 갱신)
 
-Task 1~12 완료 (스캐폴딩, Supabase 연동, DB 스키마, 익명 사용자 식별, 카운트다운, 투표, 채팅, 인정, 대표의견까지).
+**Task 1~19 전부 구현 완료 + 태스크별 리뷰 통과 + 최종 전체 브랜치 리뷰 통과.**
+전부 `main`에 커밋되어 origin(MS-Won/Balance)에 푸시됨. 정적 검증 전부 그린:
+`npm run lint` 0 에러 · `npx tsc --noEmit` 0 에러 · `npm run test` 12/12 통과.
 
-Task 13(자정 롤오버 함수)은 구현 완료(커밋 `0fa8bcc`)되었으나, 모델 일시 장애로 리뷰가 중단된 상태. **다음 작업은 Task 13 리뷰 재개**:
-1. `scripts/review-package`로 `18fc7da..0fa8bcc` 범위 diff 생성
-2. 리뷰 서브에이전트 디스패치 (Task 13은 활성 게임이 실제로 하나 존재하는 상태에서 SELECT 순서 모호성 버그를 발견/수정한 이력이 있으니, 그 수정이 안전한지 재확인 필요)
-3. 통과하면 원장에 기록 후 Task 14로 진행
+이번 세션 커밋 범위: `cc88862`..`15269ec` (Task 13 검증 수정 → Task 19 + 최종 리뷰 수정).
+최종 리뷰(opus)에서 나온 Important 1건(hall_of_fame FK cascade 누락 → `deleteGame` FK 위반)은
+마이그레이션 `0004_hall_of_fame_cascade.sql`로 수정 완료.
 
-남은 태스크: 14(명예의 전당 표시), 15(어제의 결과), 16(관리자 인증), 17(관리자 CRUD), 18(광고 자리 + 최종 레이아웃), 19(배포 문서).
+### ⚠️ 남은 일: 라이브 검증만 (env 필요, 아직 미실행)
+코드는 완료됐지만 아래 라이브 게이트는 아직 안 돌렸음. `.env.local` + `SUPABASE_ACCESS_TOKEN` 준비 후 실행:
+1. `npx supabase link --project-ref usqxzkggksqoceileqbt`
+2. `npx supabase db push`  ← **0002·0003·0004 마이그레이션 적용. 특히 0004 적용 전까지 라이브에서
+   명예의 전당에 오른 게임 삭제(`deleteGame`)는 여전히 FK 위반으로 실패함.**
+3. `npx supabase db query --linked --file supabase/verify/rollover_check.sql`  ← `NOTICE: PASS` 기대
+4. 대시보드에서 `pg_cron` 활성 + `midnight-rollover` 잡 확인
+5. `npm run dev` → `/` 및 `/admin` 브라우저 E2E (투표/채팅/인정/정렬/명예의전당, 로그인/문제 생성/삭제)
+
+### 이월된 minor/plan-mandated 항목 (병합 차단 아님, 상세는 `.superpowers/sdd/progress.md`)
+관리자 인증 하드닝(비상수시간 비교·정적 세션 쿠키·rate-limit 없음, spec §6 MVP 의도),
+createGame 서버측 입력검증·에러 UX, 롤오버 단일-active 가드, HoF 중복삽입 unique 제약 등.
 
 ## 이 프로젝트의 특이한 인프라 결정
 
