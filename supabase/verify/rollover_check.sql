@@ -15,6 +15,11 @@
 
 begin;
 
+-- Clear hall_of_fame so the assertion below is deterministic regardless of how
+-- many real leaderboard entries the shared live DB already holds. Safe because
+-- the whole script is rolled back -- the live rows are restored on rollback.
+delete from hall_of_fame;
+
 do $$
 declare
   g_id uuid;
