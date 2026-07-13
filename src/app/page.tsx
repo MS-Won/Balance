@@ -11,6 +11,8 @@ import { useChatMessages } from "@/hooks/useChatMessages";
 import { useEndorsements } from "@/hooks/useEndorsements";
 import { ChatFeed } from "@/components/ChatFeed";
 import { ChatInput } from "@/components/ChatInput";
+import { computeRepresentativeOpinions } from "@/lib/representativeOpinion";
+import { RepresentativeOpinionBar } from "@/components/RepresentativeOpinionBar";
 
 export default function Home() {
   const { game, loading } = useActiveGame();
@@ -18,6 +20,8 @@ export default function Home() {
   const { messages, sendMessage } = useChatMessages(game?.id);
   const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
+
+  const { a: repA, b: repB } = computeRepresentativeOpinions(messages, counts);
 
   useEffect(() => {
     setNicknameState(getNickname());
@@ -49,6 +53,7 @@ export default function Home() {
             <p className="text-center text-[11px] text-neutral-500">{game.description}</p>
           )}
           <VoteGraph aLabel={game.choice_a_label} bLabel={game.choice_b_label} tally={tally} />
+          <RepresentativeOpinionBar a={repA} b={repB} />
           <div className="flex gap-2">
             <button
               onClick={() => castVote("A")}
