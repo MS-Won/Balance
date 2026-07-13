@@ -1,6 +1,6 @@
 export interface RepresentativeOpinionMessage {
   id: string;
-  choice: string;
+  choice: "A" | "B";
   nickname: string;
   content: string;
   created_at: string;

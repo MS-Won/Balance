@@ -11,7 +11,7 @@ import { useChatMessages } from "@/hooks/useChatMessages";
 import { useEndorsements } from "@/hooks/useEndorsements";
 import { ChatFeed } from "@/components/ChatFeed";
 import { ChatInput } from "@/components/ChatInput";
-import { computeRepresentativeOpinions } from "@/lib/representativeOpinion";
+import { computeRepresentativeOpinions, type RepresentativeOpinionMessage } from "@/lib/representativeOpinion";
 import { RepresentativeOpinionBar } from "@/components/RepresentativeOpinionBar";
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
   const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
 
-  const { a: repA, b: repB } = computeRepresentativeOpinions(messages, counts);
+  const { a: repA, b: repB } = computeRepresentativeOpinions(messages as RepresentativeOpinionMessage[], counts);
 
   useEffect(() => {
     setNicknameState(getNickname());
