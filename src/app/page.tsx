@@ -16,6 +16,7 @@ import { RepresentativeOpinionBar } from "@/components/RepresentativeOpinionBar"
 import { useHallOfFame } from "@/hooks/useHallOfFame";
 import { HallOfFame } from "@/components/HallOfFame";
 import { YesterdayResult } from "@/components/YesterdayResult";
+import { AdPlaceholder } from "@/components/AdPlaceholder";
 
 export default function Home() {
   const { game, lastEndedGame, loading } = useActiveGame();
@@ -35,14 +36,6 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-md p-3 space-y-3">
-      {nickname === null && (
-        <NicknamePrompt
-          onSet={(value) => {
-            persistNickname(value);
-            setNicknameState(value);
-          }}
-        />
-      )}
       <Header />
       {lastEndedGame && (
         <YesterdayResult game={lastEndedGame} tally={yesterdayTally} winner={yesterdayWinnerEntry} />
@@ -94,6 +87,15 @@ export default function Home() {
         </>
       )}
       <HallOfFame entries={entries} />
+      <AdPlaceholder />
+      {nickname === null && (
+        <NicknamePrompt
+          onSet={(value) => {
+            persistNickname(value);
+            setNicknameState(value);
+          }}
+        />
+      )}
     </main>
   );
 }
