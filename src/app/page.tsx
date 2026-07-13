@@ -13,12 +13,15 @@ import { ChatFeed } from "@/components/ChatFeed";
 import { ChatInput } from "@/components/ChatInput";
 import { computeRepresentativeOpinions, type RepresentativeOpinionMessage } from "@/lib/representativeOpinion";
 import { RepresentativeOpinionBar } from "@/components/RepresentativeOpinionBar";
+import { useHallOfFame } from "@/hooks/useHallOfFame";
+import { HallOfFame } from "@/components/HallOfFame";
 
 export default function Home() {
   const { game, loading } = useActiveGame();
   const { tally, myChoice, castVote } = useVotes(game?.id);
   const { messages, sendMessage } = useChatMessages(game?.id);
   const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
+  const { entries } = useHallOfFame();
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
 
   const { a: repA, b: repB } = computeRepresentativeOpinions(messages as RepresentativeOpinionMessage[], counts);
@@ -84,6 +87,7 @@ export default function Home() {
           />
         </>
       )}
+      <HallOfFame entries={entries} />
     </main>
   );
 }
