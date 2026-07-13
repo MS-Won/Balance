@@ -15,9 +15,13 @@ export function YesterdayResult({
   return (
     <div className="bg-neutral-100 rounded-md p-2 text-xs space-y-1">
       <div className="font-bold">📊 어제의 결과: {game.choice_a_label} vs {game.choice_b_label}</div>
-      <div>
-        🏅 승리 진영: {winningLabel} ({Math.max(tally.aPct, tally.bPct)}%)
-      </div>
+      {tally.total === 0 ? (
+        <div>🏅 아직 투표가 없었습니다</div>
+      ) : (
+        <div>
+          🏅 승리 진영: {winningLabel} ({Math.max(tally.aPct, tally.bPct)}%)
+        </div>
+      )}
       {winner && (
         <div>👑 명예의 전당 등극: {winner.nickname} (인정 {winner.endorsement_count})</div>
       )}

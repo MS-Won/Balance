@@ -18,6 +18,7 @@ export function useHallOfFame() {
         .from("hall_of_fame")
         .select("*")
         .order("endorsement_count", { ascending: false })
+        .order("created_at", { ascending: true })
         .limit(10);
       if (!cancelled && data) setEntries(data);
     }
