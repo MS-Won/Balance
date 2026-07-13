@@ -1,16 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { VoteGraph } from "@/components/VoteGraph";
 import { useActiveGame } from "@/hooks/useActiveGame";
 import { useVotes } from "@/hooks/useVotes";
+import { getNickname, setNickname as persistNickname } from "@/lib/deviceIdentity";
+import { NicknamePrompt } from "@/components/NicknamePrompt";
 
 export default function Home() {
   const { game, loading } = useActiveGame();
   const { tally, myChoice, castVote } = useVotes(game?.id);
+  const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    setNicknameState(getNickname());
+  }, []);
 
   return (
     <main className="mx-auto max-w-md p-3 space-y-3">
+      {nickname === null && (
+        <NicknamePrompt
+          onSet={(value) => {
+            persistNickname(value);
+            setNicknameState(value);
+          }}
+        />
+      )}
       <Header />
       {loading && <p className="text-center text-sm text-neutral-500">불러오는 중...</p>}
       {!loading && !game && (
