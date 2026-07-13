@@ -1,7 +1,19 @@
 -- supabase/verify/rollover_check.sql
 -- Run with: npx supabase db query --linked --file supabase/verify/rollover_check.sql
+--
+-- SAFE AGAINST LIVE DATA. This project shares ONE hosted Supabase project for
+-- dev and production, so this check runs against the live database. The entire
+-- check is therefore wrapped in a transaction that is ALWAYS rolled back:
+-- none of perform_midnight_rollover()'s side effects on real rows -- ending
+-- the active game, activating the next scheduled game, or trimming the shared
+-- hall_of_fame down to the top 10 -- are ever committed. The fixture rows are
+-- discarded by the same rollback, so no explicit cleanup is needed.
+--
 -- Expects the fixtures below to result in the 'A' side winning with the
--- highest-endorsed 'A' message going to the hall of fame.
+-- highest-endorsed 'A' message going to the hall of fame. On success the
+-- server emits `NOTICE: PASS: ...`; any assertion failure raises an exception.
+
+begin;
 
 do $$
 declare
@@ -13,6 +25,9 @@ declare
   hof_count int;
   hof_nickname text;
 begin
+  -- Fixture game dated 2000-01-01 so perform_midnight_rollover()'s
+  -- `order by date asc` active-game pick deterministically targets THIS row
+  -- (the oldest active game) rather than the live production game.
   insert into balance_games (date, choice_a_label, choice_b_label, status)
     values ('2000-01-01', 'A_TEST', 'B_TEST', 'active') returning id into g_id;
 
@@ -43,11 +58,8 @@ begin
   end if;
 
   raise notice 'PASS: rollover picked the correct winner and hall of fame entrant';
-
-  -- cleanup
-  delete from hall_of_fame where game_id = g_id;
-  delete from chat_messages where game_id = g_id;
-  delete from votes where game_id = g_id;
-  delete from balance_games where id = g_id;
 end;
 $$;
+
+-- Discard everything above (fixtures AND the function's side effects on live rows).
+rollback;
