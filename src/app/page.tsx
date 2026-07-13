@@ -31,6 +31,13 @@ export default function Home() {
   const { a: repA, b: repB } = computeRepresentativeOpinions(messages as RepresentativeOpinionMessage[], counts);
 
   useEffect(() => {
+    // Read the nickname from localStorage only after mount. getNickname() touches
+    // window.localStorage (no SSR guard), so it cannot run during server prerender,
+    // and a lazy useState initializer would either crash on the server or cause a
+    // hydration mismatch (server: undefined -> no modal; client: null -> modal). The
+    // deferred-read-in-effect is the correct pattern here, so this rule is a false
+    // positive for this specific case.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNicknameState(getNickname());
   }, []);
 
