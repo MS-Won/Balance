@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>밸런스게임 디자인 목업 v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F4EF;
+    --card:#FFFFFF;
+    --ink:#1E2024;
+    --muted:#8B9098;
+    --line:#EDEBE4;
+    --coral:#FF6B54;
+    --coral-soft:#FFE7E1;
+    --mint:#18BE9F;
+    --mint-soft:#D6F3EC;
+    --radius:22px;
+    --shadow:0 10px 28px rgba(31,32,36,.07);
+    --shadow-sm:0 4px 14px rgba(31,32,36,.06);
+    --font-hand:"Jua",sans-serif;
+    --font-poster:"Black Han Sans",sans-serif;
+    --font-base:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-base);
+    display:flex;justify-content:center;padding:22px 0 60px;-webkit-font-smoothing:antialiased}
+  .app{width:100%;max-width:430px;padding:0 16px;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+
+  /* header */
+  .header{background:linear-gradient(135deg,#FF8A73,#FF6B54 55%,#F4553D);
+    color:#fff;border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);
+    display:flex;justify-content:space-between;align-items:center}
+  .brand{font-family:var(--font-hand);font-size:24px;line-height:1}
+  .count{text-align:right}
+  .count .lbl{font-size:10px;opacity:.85}
+  .count .t{font-family:var(--font-poster);font-size:22px;letter-spacing:1px}
+
+  /* VERSUS block */
+  .versus{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:var(--card)}
+  .vparticip{text-align:center;font-size:11px;color:var(--muted);padding:16px 18px 0}
+  .vq{font-family:var(--font-hand);font-size:23px;line-height:1.3;text-align:center;
+    padding:7px 18px 20px;color:var(--ink);text-wrap:balance}
+  .cols{display:flex;gap:3px;background:var(--line)}
+  .col{flex:1;position:relative;min-height:230px;border:none;cursor:pointer;
+    padding:22px 15px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:11px;text-align:center;background:var(--coral-soft);transition:background .15s}
+  .col.b{background:var(--mint-soft)}
+  .col .clabel{font-family:var(--font-poster);font-size:26px;line-height:1.22;color:var(--coral);text-wrap:balance}
+  .col .cdesc{font-family:var(--font-hand);font-size:13px;line-height:1.35;color:var(--coral);opacity:.72;text-wrap:balance}
+  .col.b .clabel,.col.b .cdesc{color:var(--mint)}
+  /* selected = 색 반전(솔직 채움 + 흰 글씨) + 테두리(안쪽 흰 링) */
+  .col.selected.a{background:var(--coral);box-shadow:inset 0 0 0 5px #B8341F}
+  .col.selected.b{background:var(--mint);box-shadow:inset 0 0 0 5px #0B8A72}
+  .col.selected .clabel,.col.selected .cdesc{color:#fff}
+  .col.selected .cdesc{opacity:.92}
+  .tick{position:absolute;top:11px;right:11px;width:23px;height:23px;border-radius:50%;
+    background:#fff;display:none;align-items:center;justify-content:center;font-size:13px;font-weight:900}
+  .col.selected .tick{display:flex}
+  .col.selected.a .tick{color:var(--coral)} .col.selected.b .tick{color:var(--mint)}
+
+  /* tally: 풀블리드 막대 (질문창과 동일 가로폭, 주변 여백 없음) */
+  .tally{padding:0}
+  .tallybar{display:flex;height:44px}
+  .tallybar .fa{background:var(--coral);display:flex;align-items:center;padding-left:15px;min-width:0}
+  .tallybar .fb{background:var(--mint);display:flex;align-items:center;justify-content:flex-end;padding-right:15px;min-width:0}
+  .tallybar span{font-family:var(--font-poster);font-size:21px;color:#fff}
+
+  /* representative */
+  .reps{display:flex;gap:12px}
+  .rep{flex:1;border-radius:18px;padding:13px 14px;box-shadow:var(--shadow-sm)}
+  .rep.a{background:var(--coral-soft)} .rep.b{background:var(--mint-soft)}
+  .rep .h{font-size:12px;font-weight:800;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+  .rep.a .h{color:#C0432C} .rep.b .h{color:#0B8A72}
+  .rep .h .cnt{margin-left:auto;font-weight:800}
+  .rep .body{font-size:13px;line-height:1.4}
+
+  /* chat */
+  .sectionlabel{font-family:var(--font-hand);font-size:15px;color:var(--ink);margin:6px 2px 4px;display:flex;justify-content:space-between;align-items:center}
+  .sectionlabel .sort{font-family:var(--font-base);font-weight:600;color:var(--muted);font-size:11px}
+  .msg{display:flex;gap:9px;align-items:center;margin-bottom:10px}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.a{background:var(--coral)} .dot.b{background:var(--mint)}
+  .bubble{flex:1;background:#fff;border-radius:14px;padding:10px 13px;box-shadow:var(--shadow-sm)}
+  .bubble .nick{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px}
+  .bubble .txt{font-size:13px;line-height:1.4}
+  /* ㅇㅈ 워드아트 글리프 (👍 대체, 하나의 이모지처럼) */
+  .oj{font-family:var(--font-poster);display:inline-block;transform:rotate(-5deg);
+    color:var(--coral);letter-spacing:.5px;line-height:1}
+  .endorse{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:48px;border:2px solid var(--line);cursor:pointer;background:#fff;border-radius:13px;padding:7px 7px;color:#6b7078}
+  .endorse .oj{font-size:15px}
+  .endorse.on{background:var(--coral);border-color:var(--coral);color:#fff}
+  .endorse.on .oj{color:#fff}
+  .endorse .c{font-size:10px;font-weight:800;margin-top:3px}
+  .rep .oj{color:inherit;font-size:13px;margin-right:2px}
+  .chatinput{display:flex;gap:8px;margin-top:4px}
+  .chatinput input{flex:1;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13px;font-family:var(--font-base)}
+  .chatinput button{border:none;background:var(--ink);color:#fff;border-radius:14px;padding:0 18px;font-size:13px;font-weight:700}
+
+  /* hall of fame */
+  .hof .item{display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid var(--line)}
+  .hof .item:last-child{border-bottom:none}
+  .medal{font-size:19px;width:26px;text-align:center}
+  .hof .nick{font-size:13px;font-weight:700} .hof .q{font-size:11px;color:var(--muted)}
+  .hof .cnt{margin-left:auto;font-size:12px;font-weight:800;color:#5a5f66;background:#F3F1EA;border-radius:999px;padding:3px 11px}
+  .hof .cnt .oj{font-size:13px;margin-right:3px}
+  .title{font-family:var(--font-hand);font-size:17px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">오늘의 밸런스</div>
+    <div class="count"><div class="lbl">다음 밸런스까지</div><div class="t">03:12:44</div></div>
+  </div>
+
+  <!-- VERSUS -->
+  <div class="versus">
+    <div class="vparticip">지금까지 1,240명 참여했어요</div>
+    <div class="vq">Q. 다음 중 더 최악인 상황은?</div>
+    <div class="cols">
+      <button class="col a selected">
+        <div class="tick">✓</div>
+        <div class="clabel">전여친이랑 밤새 술마시기</div>
+        <div class="cdesc">(2년 정도 사귐)</div>
+      </button>
+      <button class="col b">
+        <div class="tick">✓</div>
+        <div class="clabel">여사친이랑 1박 2일 제주도 여행</div>
+        <div class="cdesc">(20년지기 중학교때 친구)</div>
+      </button>
+    </div>
+    <div class="tally">
+      <div class="tallybar">
+        <div class="fa" style="width:64%"><span>64%</span></div>
+        <div class="fb" style="width:36%"><span>36%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPRESENTATIVE -->
+  <div class="reps">
+    <div class="rep a"><div class="h">현실주의자_K<span class="cnt"><span class="oj">ㅇㅈ</span>42</span></div><div class="body">2년이면 정 다 떨어졌지. 밤샘이 낫다.</div></div>
+    <div class="rep b"><div class="h">우정파괴반대<span class="cnt"><span class="oj">ㅇㅈ</span>31</span></div><div class="body">20년 우정이 하룻밤에 오해로 끝난다.</div></div>
+  </div>
+
+  <!-- CHAT -->
+  <div>
+    <div class="sectionlabel">의견을 써주세요 :) <span class="sort">ㅇㅈ순 ▾</span></div>
+    <div class="msg">
+      <div class="dot a"></div>
+      <div class="bubble"><div class="nick">현실주의자_K</div><div class="txt">2년이면 정 다 떨어졌지. 밤샘이 낫다.</div></div>
+      <button class="endorse on"><span class="oj">ㅇㅈ</span><span class="c">42</span></button>
+    </div>
+    <div class="msg">
+      <div class="dot b"></div>
+      <div class="bubble"><div class="nick">우정파괴반대</div><div class="txt">20년 우정이 하룻밤에 오해로 끝난다.</div></div>
+      <button class="endorse"><span class="oj">ㅇㅈ</span><span class="c">31</span></button>
+    </div>
+    <div class="msg">
+      <div class="dot b"></div>
+      <div class="bubble"><div class="nick">제주도가고파</div><div class="txt">솔직히 제주도는 못 참지... 미안하다 여사친아</div></div>
+      <button class="endorse"><span class="oj">ㅇㅈ</span><span class="c">8</span></button>
+    </div>
+    <div class="chatinput"><input placeholder="의견을 남기려면 먼저 투표하세요"><button>전송</button></div>
+  </div>
+
+  <!-- HALL OF FAME -->
+  <div class="card hof">
+    <div class="title">🏆 명예의 전당</div>
+    <div class="item"><div class="medal">🥇</div><div><div class="nick">탕수육_부먹파</div><div class="q">부먹 vs 찍먹 · 👑 승리</div></div><div class="cnt"><span class="oj">ㅇㅈ</span>128</div></div>
+    <div class="item"><div class="medal">🥈</div><div><div class="nick">아침형인간설계자</div><div class="q">일찍 일어나기 vs 늦게 자기</div></div><div class="cnt"><span class="oj">ㅇㅈ</span>97</div></div>
+    <div class="item"><div class="medal">🥉</div><div><div class="nick">파인애플_피자킹</div><div class="q">하와이안 피자 논쟁</div></div><div class="cnt"><span class="oj">ㅇㅈ</span>81</div></div>
+  </div>
+
+</div>
+</body>
+</html>
