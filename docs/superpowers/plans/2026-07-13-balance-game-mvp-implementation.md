@@ -174,13 +174,19 @@ npm install @supabase/supabase-js
 npm install -D supabase
 ```
 
-- [ ] **Step 2: Initialize the local Supabase project**
+- [ ] **Step 2: Initialize the Supabase project config and link it to a hosted project**
 
 ```bash
 npx supabase init
 ```
 
-This requires Docker Desktop running for `supabase start` later in Task 3. Note that requirement now; the engineer running this plan needs Docker installed.
+This project targets a hosted Supabase project for both development and production — there is no local Docker-based Supabase in this workflow. Create a project at supabase.com (or reuse an existing one), then link this repo to it:
+
+```bash
+npx supabase link --project-ref <PROJECT_REF> --password '<DB_PASSWORD>'
+```
+
+`link` requires a Supabase personal access token in `SUPABASE_ACCESS_TOKEN` (generate one at https://supabase.com/dashboard/account/tokens; `supabase login` also works if the terminal is interactive). `<PROJECT_REF>` is the subdomain segment of the project URL (e.g. `https://<PROJECT_REF>.supabase.co`).
 
 - [ ] **Step 3: Add environment variable template**
 
@@ -193,7 +199,7 @@ ADMIN_PASSWORD=
 ADMIN_SESSION_SECRET=
 ```
 
-Copy this to `.env.local` and fill in values from `npx supabase start` output (local) or the Supabase dashboard (hosted) before running the app.
+Copy this to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` from the Supabase dashboard's Project Settings → API page. `SUPABASE_ACCESS_TOKEN` (from Step 2) is a separate, CLI-only credential — export it in the shell, don't put it in `.env.local` (the app never reads it).
 
 - [ ] **Step 4: Add the browser client singleton**
 
@@ -366,19 +372,18 @@ alter publication supabase_realtime add table endorsements;
 alter publication supabase_realtime add table balance_games;
 ```
 
-- [ ] **Step 2: Start local Supabase and apply the migration**
+- [ ] **Step 2: Push the migration to the linked hosted project**
 
 ```bash
-npx supabase start
-npx supabase db reset
+npx supabase db push
 ```
 
-Expected: output lists all 5 tables created with no errors. `supabase start` prints a local `API URL`, `anon key`, and `service_role key` — copy these into `.env.local`.
+Expected: output lists `0001_init_schema.sql` as applied with no errors. Confirm the 5 tables exist via the Supabase dashboard's Table Editor, or `npx supabase db query --linked "select table_name from information_schema.tables where table_schema = 'public';"`.
 
 - [ ] **Step 3: Generate TypeScript types from the schema**
 
 ```bash
-npx supabase gen types typescript --local > src/types/database.ts
+npx supabase gen types typescript --linked > src/types/database.ts
 ```
 
 Expected: `src/types/database.ts` now contains a real `Database` type with `Tables: { balance_games: ...; votes: ...; chat_messages: ...; endorsements: ...; hall_of_fame: ... }`.
@@ -730,7 +735,7 @@ export default function Home() {
 - [ ] **Step 3: Seed a local test game and verify manually**
 
 ```bash
-npx supabase db execute --sql "insert into balance_games (date, choice_a_label, choice_b_label, description, status) values (current_date, '짜장면', '짬뽕', '평생 하나만 먹어야 한다면?', 'active');"
+npx supabase db query --linked "insert into balance_games (date, choice_a_label, choice_b_label, description, status) values (current_date, '짜장면', '짬뽕', '평생 하나만 먹어야 한다면?', 'active');"
 ```
 
 ```bash
@@ -1780,16 +1785,16 @@ select cron.schedule(
 - [ ] **Step 2: Apply the migration**
 
 ```bash
-npx supabase db reset
+npx supabase db push
 ```
 
-Expected: no errors; `select cron.job` shows the `midnight-rollover` job.
+Expected: no errors; `npx supabase db query --linked "select jobname from cron.job;"` shows `midnight-rollover`.
 
 - [ ] **Step 3: Write a manual verification script**
 
 ```sql
 -- supabase/verify/rollover_check.sql
--- Run with: npx supabase db execute --file supabase/verify/rollover_check.sql
+-- Run with: npx supabase db query --linked --file supabase/verify/rollover_check.sql
 -- Expects the fixtures below to result in the 'A' side winning with the
 -- highest-endorsed 'A' message going to the hall of fame.
 
@@ -1846,7 +1851,7 @@ $$;
 - [ ] **Step 4: Run the verification script and confirm it fails first (no function yet would fail differently — instead confirm current logic passes)**
 
 ```bash
-npx supabase db execute --file supabase/verify/rollover_check.sql
+npx supabase db query --linked --file supabase/verify/rollover_check.sql
 ```
 
 Expected: `NOTICE: PASS: rollover picked the correct winner and hall of fame entrant`. If it raises `FAIL: ...`, fix `perform_midnight_rollover()` and rerun until it passes.
@@ -1963,7 +1968,7 @@ Add `<HallOfFame entries={entries} />` at the bottom of `<main>`, after the chat
 - [ ] **Step 4: Verify manually**
 
 ```bash
-npx supabase db execute --sql "insert into hall_of_fame (game_id, date, winning_choice, message_id, nickname, endorsement_count) select id, date, 'A', (select id from chat_messages limit 1), 'test_winner', 42 from balance_games limit 1;"
+npx supabase db query --linked "insert into hall_of_fame (game_id, date, winning_choice, message_id, nickname, endorsement_count) select id, date, 'A', (select id from chat_messages limit 1), 'test_winner', 42 from balance_games limit 1;"
 ```
 
 Reload `http://localhost:3000`, confirm the hall of fame card shows `test_winner` with `인정 42`.
@@ -2106,7 +2111,7 @@ Add, directly under `<Header />`:
 - [ ] **Step 4: Verify manually**
 
 ```bash
-npx supabase db execute --sql "update balance_games set status = 'ended' where status = 'active';"
+npx supabase db query --linked "update balance_games set status = 'ended' where status = 'active';"
 ```
 
 Reload the page, confirm "어제의 결과" renders with the correct winning side and (if present) hall of fame entrant, and that the live game/voting/chat UI is hidden since there's no active game.
@@ -2114,7 +2119,7 @@ Reload the page, confirm "어제의 결과" renders with the correct winning sid
 Re-activate a game for continued testing:
 
 ```bash
-npx supabase db execute --sql "update balance_games set status = 'active' where status = 'ended' order by date desc limit 1;"
+npx supabase db query --linked "update balance_games set status = 'active' where status = 'ended' order by date desc limit 1;"
 ```
 
 - [ ] **Step 5: Commit**
@@ -2476,22 +2481,41 @@ git commit -m "feat: finalize main page layout with ad placeholder"
 
 ## Local development
 
+This project develops against a hosted Supabase project (no local Docker-based
+Supabase is used).
+
 1. Install dependencies: `npm install`
-2. Install Docker Desktop (required for local Supabase).
-3. Start Supabase locally: `npx supabase start`
-4. Copy `.env.local.example` to `.env.local` and fill in the values printed
-   by `supabase start` (`API URL` → `NEXT_PUBLIC_SUPABASE_URL`, `anon key` →
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `service_role key` →
-   `SUPABASE_SERVICE_ROLE_KEY`). Set `ADMIN_PASSWORD` and generate
-   `ADMIN_SESSION_SECRET` with `openssl rand -hex 16`.
-5. Apply migrations: `npx supabase db reset`
-6. Run the app: `npm run dev`
-7. Run tests: `npm run test`
+2. Create a project at supabase.com (or reuse an existing one for this app).
+3. Copy `.env.local.example` to `.env.local` and fill in
+   `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` /
+   `SUPABASE_SERVICE_ROLE_KEY` from the dashboard's Project Settings → API
+   page. Set `ADMIN_PASSWORD` and generate `ADMIN_SESSION_SECRET` with
+   `openssl rand -hex 16`.
+4. Generate a personal access token at
+   https://supabase.com/dashboard/account/tokens, export it as
+   `SUPABASE_ACCESS_TOKEN`, then link and push the schema:
+   ```bash
+   npx supabase init
+   npx supabase link --project-ref <PROJECT_REF> --password '<DB_PASSWORD>'
+   npx supabase db push
+   npx supabase gen types typescript --linked > src/types/database.ts
+   ```
+5. Run the app: `npm run dev`
+6. Run tests: `npm run test`
+
+If you're on a network with TLS-inspecting security software (common on some
+corporate/institutional networks), Node and the Supabase CLI may reject the
+intercepted certificate even though your browser trusts it. If `npm run dev`
+or `npx supabase` commands fail with a certificate error, export your
+network's root CA as a PEM file and set `NODE_EXTRA_CA_CERTS` (for Node/Next.js)
+and `SSL_CERT_FILE` (for the Supabase CLI) to point at it before running these
+commands.
 
 ## Deployment
 
-1. Create a hosted Supabase project and run `npx supabase db push` to apply
-   migrations to it.
+1. Reuse the same Supabase project from local development (or create a
+   separate production project) and confirm `npx supabase db push` has been
+   applied to it.
 2. In the Supabase dashboard, confirm the `pg_cron` extension is enabled and
    the `midnight-rollover` job is listed under Database → Cron Jobs.
 3. Create a Vercel project linked to this repository.
