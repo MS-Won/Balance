@@ -6,6 +6,13 @@ import type { Database } from "@/types/database";
 
 export type BalanceGame = Database["public"]["Tables"]["balance_games"]["Row"];
 
+// Today's date (YYYY-MM-DD) in KST, regardless of the viewer's local timezone.
+// 'en-CA' formats as YYYY-MM-DD, which sorts and compares correctly against the
+// balance_games.date column.
+function getTodayKST(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+}
+
 export function useActiveGame() {
   const [game, setGame] = useState<BalanceGame | null>(null);
   const [lastEndedGame, setLastEndedGame] = useState<BalanceGame | null>(null);
@@ -16,19 +23,22 @@ export function useActiveGame() {
     let cancelled = false;
 
     async function load() {
-      const [{ data: active }, { data: ended }] = await Promise.all([
-        supabase.from("balance_games").select("*").eq("status", "active").maybeSingle(),
-        supabase
-          .from("balance_games")
-          .select("*")
-          .eq("status", "ended")
-          .order("date", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
+      // Date-driven selection: the "current" game is the most recent one whose
+      // date has arrived (<= today in KST); the game before it is shown as
+      // yesterday's result. This makes scheduled games appear automatically on
+      // their date and self-heals if the active chain is ever empty — no
+      // dependence on a mutable status flag.
+      const today = getTodayKST();
+      const { data } = await supabase
+        .from("balance_games")
+        .select("*")
+        .lte("date", today)
+        .order("date", { ascending: false })
+        .limit(2);
+
       if (!cancelled) {
-        setGame(active ?? null);
-        setLastEndedGame(ended ?? null);
+        setGame(data?.[0] ?? null);
+        setLastEndedGame(data?.[1] ?? null);
         setLoading(false);
       }
     }

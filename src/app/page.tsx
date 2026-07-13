@@ -55,6 +55,9 @@ export default function Home() {
       )}
       {game && (
         <>
+          {game.question && (
+            <h2 className="text-center text-base font-bold">{game.question}</h2>
+          )}
           <div className="text-center text-sm font-bold">
             🅰 {game.choice_a_label} vs {game.choice_b_label} 🅱
           </div>

@@ -1,8 +1,20 @@
 import { createGame, deleteGame, listGames } from "@/app/admin/actions";
 import { revalidatePath } from "next/cache";
 
+// Given a YYYY-MM-DD string, return the next calendar day as YYYY-MM-DD.
+// Uses UTC math on a date-only value so there is no timezone drift.
+function nextDay(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function AdminPage() {
   const games = await listGames();
+  // Default the date field to the day after the latest registered game.
+  // listGames() returns games ordered by date desc, so games[0] is the latest.
+  // With no games registered, leave it empty (browser shows mm/dd/yyyy).
+  const defaultDate = games[0] ? nextDay(games[0].date) : undefined;
 
   async function create(formData: FormData) {
     "use server";
@@ -21,7 +33,19 @@ export default async function AdminPage() {
       <h1 className="font-bold text-sm">밸런스 게임 문제 관리</h1>
 
       <form action={create} className="space-y-2 border rounded-md p-2">
-        <input type="date" name="date" required className="border rounded-md w-full px-2 py-1 text-sm" />
+        <input
+          type="date"
+          name="date"
+          required
+          defaultValue={defaultDate}
+          className="border rounded-md w-full px-2 py-1 text-sm"
+        />
+        <input
+          name="question"
+          placeholder="질문 (예: 점심 뭐 먹지?)"
+          required
+          className="border rounded-md w-full px-2 py-1 text-sm"
+        />
         <input
           name="choice_a_label"
           placeholder="선택지 A"
@@ -48,7 +72,8 @@ export default async function AdminPage() {
         {games.map((g) => (
           <li key={g.id} className="flex justify-between items-center border rounded-md p-2 text-xs">
             <span>
-              {g.date} · {g.choice_a_label} vs {g.choice_b_label} · {g.status}
+              {g.date} · {g.question ? `${g.question} — ` : ""}
+              {g.choice_a_label} vs {g.choice_b_label} · {g.status}
             </span>
             <form action={remove.bind(null, g.id)}>
               <button type="submit" className="text-red-600">
