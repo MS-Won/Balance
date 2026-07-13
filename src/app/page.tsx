@@ -7,10 +7,14 @@ import { useActiveGame } from "@/hooks/useActiveGame";
 import { useVotes } from "@/hooks/useVotes";
 import { getNickname, setNickname as persistNickname } from "@/lib/deviceIdentity";
 import { NicknamePrompt } from "@/components/NicknamePrompt";
+import { useChatMessages } from "@/hooks/useChatMessages";
+import { ChatFeed } from "@/components/ChatFeed";
+import { ChatInput } from "@/components/ChatInput";
 
 export default function Home() {
   const { game, loading } = useActiveGame();
   const { tally, myChoice, castVote } = useVotes(game?.id);
+  const { messages, sendMessage } = useChatMessages(game?.id);
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -61,6 +65,16 @@ export default function Home() {
               {game.choice_b_label} 🅱
             </button>
           </div>
+          <ChatFeed
+            messages={messages}
+            endorsementCounts={{}}
+            myEndorsedIds={new Set()}
+            onEndorse={() => {}}
+          />
+          <ChatInput
+            disabled={!myChoice || !nickname}
+            onSend={(content) => myChoice && sendMessage(content, myChoice)}
+          />
         </>
       )}
     </main>
