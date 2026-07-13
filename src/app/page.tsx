@@ -15,13 +15,16 @@ import { computeRepresentativeOpinions, type RepresentativeOpinionMessage } from
 import { RepresentativeOpinionBar } from "@/components/RepresentativeOpinionBar";
 import { useHallOfFame } from "@/hooks/useHallOfFame";
 import { HallOfFame } from "@/components/HallOfFame";
+import { YesterdayResult } from "@/components/YesterdayResult";
 
 export default function Home() {
-  const { game, loading } = useActiveGame();
+  const { game, lastEndedGame, loading } = useActiveGame();
   const { tally, myChoice, castVote } = useVotes(game?.id);
+  const { tally: yesterdayTally } = useVotes(lastEndedGame?.id);
   const { messages, sendMessage } = useChatMessages(game?.id);
   const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
   const { entries } = useHallOfFame();
+  const yesterdayWinnerEntry = entries.find((e) => e.game_id === lastEndedGame?.id) ?? null;
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
 
   const { a: repA, b: repB } = computeRepresentativeOpinions(messages as RepresentativeOpinionMessage[], counts);
@@ -41,6 +44,9 @@ export default function Home() {
         />
       )}
       <Header />
+      {lastEndedGame && (
+        <YesterdayResult game={lastEndedGame} tally={yesterdayTally} winner={yesterdayWinnerEntry} />
+      )}
       {loading && <p className="text-center text-sm text-neutral-500">불러오는 중...</p>}
       {!loading && !game && (
         <p className="text-center text-sm text-neutral-500">

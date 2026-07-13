@@ -8,6 +8,7 @@ export type BalanceGame = Database["public"]["Tables"]["balance_games"]["Row"];
 
 export function useActiveGame() {
   const [game, setGame] = useState<BalanceGame | null>(null);
+  const [lastEndedGame, setLastEndedGame] = useState<BalanceGame | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,13 +16,19 @@ export function useActiveGame() {
     let cancelled = false;
 
     async function load() {
-      const { data } = await supabase
-        .from("balance_games")
-        .select("*")
-        .eq("status", "active")
-        .maybeSingle();
+      const [{ data: active }, { data: ended }] = await Promise.all([
+        supabase.from("balance_games").select("*").eq("status", "active").maybeSingle(),
+        supabase
+          .from("balance_games")
+          .select("*")
+          .eq("status", "ended")
+          .order("date", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
       if (!cancelled) {
-        setGame(data ?? null);
+        setGame(active ?? null);
+        setLastEndedGame(ended ?? null);
         setLoading(false);
       }
     }
@@ -42,5 +49,5 @@ export function useActiveGame() {
     };
   }, []);
 
-  return { game, loading };
+  return { game, lastEndedGame, loading };
 }
