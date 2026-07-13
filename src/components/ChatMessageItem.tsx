@@ -13,23 +13,20 @@ export function ChatMessageItem({
 }) {
   const isA = message.choice === "A";
   return (
-    <div
-      className={`flex items-center justify-between gap-2 rounded-md px-2 py-1 text-xs border-l-4 ${
-        isA ? "bg-rose-50 border-rose-500" : "bg-blue-50 border-blue-500"
-      }`}
-    >
-      <div>
-        <span className="font-bold mr-1">{isA ? "🅰" : "🅱"} {message.nickname}</span>
-        <span>{message.content}</span>
+    <div className="msg">
+      <div className={`dot ${isA ? "a" : "b"}`} />
+      <div className="bubble">
+        <div className="nick">{message.nickname}</div>
+        <div className="txt">{message.content}</div>
       </div>
       <button
+        type="button"
+        className={`endorse${endorsed ? " on" : ""}`}
         onClick={onEndorse}
         disabled={endorsed}
-        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-          endorsed ? "bg-amber-400 text-white" : "bg-neutral-200 text-neutral-700"
-        }`}
       >
-        인정 {endorsementCount}
+        <span className="oj">ㅇㅈ</span>
+        <span className="c">{endorsementCount}</span>
       </button>
     </div>
   );

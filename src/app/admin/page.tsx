@@ -53,14 +53,19 @@ export default async function AdminPage() {
           className="border rounded-md w-full px-2 py-1 text-sm"
         />
         <input
+          name="choice_a_description"
+          placeholder="선택지 A 상세가정 (선택)"
+          className="border rounded-md w-full px-2 py-1 text-sm"
+        />
+        <input
           name="choice_b_label"
           placeholder="선택지 B"
           required
           className="border rounded-md w-full px-2 py-1 text-sm"
         />
-        <textarea
-          name="description"
-          placeholder="상세가정 (선택)"
+        <input
+          name="choice_b_description"
+          placeholder="선택지 B 상세가정 (선택)"
           className="border rounded-md w-full px-2 py-1 text-sm"
         />
         <button type="submit" className="bg-neutral-800 text-white rounded-md px-3 py-1 text-sm">

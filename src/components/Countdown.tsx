@@ -13,5 +13,5 @@ export function Countdown() {
     return () => clearInterval(interval);
   }, []);
 
-  return <span className="font-mono text-sm">⏰ {label}</span>;
+  return <div className="t">{label}</div>;
 }

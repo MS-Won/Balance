@@ -1,26 +1,30 @@
 import type { HallOfFameEntry } from "@/hooks/useHallOfFame";
 
-export function HallOfFame({ entries }: { entries: HallOfFameEntry[] }) {
-  if (entries.length === 0) {
-    return (
-      <div className="bg-amber-50 rounded-md p-2 text-center text-xs text-neutral-500">
-        🏆 명예의 전당 (아직 없음)
-      </div>
-    );
-  }
+const MEDALS = ["🥇", "🥈", "🥉"];
 
+export function HallOfFame({ entries }: { entries: HallOfFameEntry[] }) {
   return (
-    <div className="bg-amber-50 rounded-md p-2">
-      <div className="text-xs font-bold mb-1">🏆 명예의 전당</div>
-      <div className="flex gap-2 overflow-x-auto">
-        {entries.map((entry, i) => (
-          <div key={entry.id} className="shrink-0 w-24 bg-white rounded-md p-1 text-center text-[10px]">
-            <div className="font-bold">#{i + 1}</div>
-            <div className="truncate">{entry.nickname}</div>
-            <div className="text-amber-600">인정 {entry.endorsement_count}</div>
+    <div className="card hof">
+      <div className="title">🏆 명예의 전당</div>
+      {entries.length === 0 ? (
+        <div className="empty">아직 전설이 된 자가 없습니다</div>
+      ) : (
+        entries.map((entry, i) => (
+          <div key={entry.id} className="item">
+            <div className="medal">{MEDALS[i] ?? `#${i + 1}`}</div>
+            <div>
+              <div className="nick">{entry.nickname}</div>
+              <div className="q">
+                {entry.date} · {entry.winning_choice} 진영 승리
+              </div>
+            </div>
+            <div className="cnt">
+              <span className="oj">ㅇㅈ</span>
+              {entry.endorsement_count}
+            </div>
           </div>
-        ))}
-      </div>
+        ))
+      )}
     </div>
   );
 }

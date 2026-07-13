@@ -46,8 +46,13 @@ export async function createGame(formData: FormData) {
     date: String(formData.get("date")),
     question: formData.get("question") ? String(formData.get("question")) : null,
     choice_a_label: String(formData.get("choice_a_label")),
+    choice_a_description: formData.get("choice_a_description")
+      ? String(formData.get("choice_a_description"))
+      : null,
     choice_b_label: String(formData.get("choice_b_label")),
-    description: formData.get("description") ? String(formData.get("description")) : null,
+    choice_b_description: formData.get("choice_b_description")
+      ? String(formData.get("choice_b_description"))
+      : null,
     status: "scheduled",
   });
   if (error) throw error;

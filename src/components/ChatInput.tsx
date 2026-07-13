@@ -18,21 +18,16 @@ export function ChatInput({
   }
 
   return (
-    <div className="flex gap-1">
+    <div className="chatinput">
       <input
-        className="flex-1 border rounded-md px-2 py-1 text-sm"
         value={value}
         maxLength={500}
         disabled={disabled}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && submit()}
-        placeholder="💬 채팅 입력..."
+        placeholder={disabled ? "먼저 투표해야 의견을 쓸 수 있어요" : "의견을 써주세요..."}
       />
-      <button
-        onClick={submit}
-        disabled={disabled}
-        className="bg-neutral-800 text-white rounded-md px-3 text-sm font-bold disabled:opacity-40"
-      >
+      <button onClick={submit} disabled={disabled}>
         전송
       </button>
     </div>

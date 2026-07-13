@@ -41,7 +41,9 @@ export type Database = {
     Tables: {
       balance_games: {
         Row: {
+          choice_a_description: string | null
           choice_a_label: string
+          choice_b_description: string | null
           choice_b_label: string
           created_at: string
           date: string
@@ -51,7 +53,9 @@ export type Database = {
           status: string
         }
         Insert: {
+          choice_a_description?: string | null
           choice_a_label: string
+          choice_b_description?: string | null
           choice_b_label: string
           created_at?: string
           date: string
@@ -61,7 +65,9 @@ export type Database = {
           status?: string
         }
         Update: {
+          choice_a_description?: string | null
           choice_a_label?: string
+          choice_b_description?: string | null
           choice_b_label?: string
           created_at?: string
           date?: string

@@ -25,16 +25,17 @@ export function ChatFeed({
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs font-bold text-neutral-600">전체 채팅</span>
+      <div className="sectionlabel">
+        의견을 써주세요 :)
         <button
+          type="button"
+          className="sort"
           onClick={() => setSortByEndorsements((v) => !v)}
-          className="text-[10px] bg-neutral-200 rounded-full px-2 py-0.5"
         >
-          {sortByEndorsements ? "🔥 인정순 보기" : "🕒 최신순 보기"}
+          {sortByEndorsements ? "ㅇㅈ순 ▾" : "최신순 ▾"}
         </button>
       </div>
-      <div className="space-y-1 max-h-72 overflow-y-auto">
+      <div className="chatlist">
         {sorted.map((message) => (
           <ChatMessageItem
             key={message.id}
