@@ -9,7 +9,26 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
-## 현재 진행 상황 (2026-07-13 갱신)
+## 현재 진행 상황 (2026-07-14 갱신 — 디자인 리디자인 v1 완료)
+
+**메인 `/` 전면 리디자인 v1 구현 완료 + origin 푸시.** 디자인 스펙: `design.md`, 목업: `docs/design-mockup.html`.
+- 컨셉: 데드팬/부조리 + 라이트&에어리(HydroTrack 무드). 코랄(A)/민트(B).
+- 폰트: **Black Han Sans**(선택지·숫자·ㅇㅈ) + **Jua**(질문·라벨) — `src/app/layout.tsx`에서 구글폰트 `<link>`로 로드
+  (이 PC는 Node TLS 가로채기 때문에 빌드 시 `next/font`가 실패할 수 있어 `<link>` 채택. lint 경고 1건 `no-page-custom-font`는 무해).
+- 신규 `BalanceCard`(질문 + 좌/우 선택지=투표버튼 + 풀블리드 투표바), ㅇㅈ 워드아트로 👍 전면 교체.
+- 선택지별 상세가정: `choice_a_description`/`choice_b_description` 컬럼(**마이그레이션 0006, 운영 적용 완료**) + admin 폼/`createGame`/메인 표시.
+  질문/선택지 줄바꿈은 CSS `text-wrap:balance`로 자동 처리(admin에서 한 줄 입력).
+- 제거: `YesterdayResult`(어제의 결과), `AdPlaceholder`(광고), `VoteGraph`.
+- 정적 게이트 그린: tsc 0 · test 12/12 · lint 0 error(경고 1). dev 스모크 `/`·`/admin/login` 200, 런타임 에러 없음.
+- **마이그레이션 0005(question)·0006(choice descriptions) 모두 운영 DB(usqxzkggksqoceileqbt)에 적용 완료.**
+
+### 남은 일 (사람 확인)
+- 브라우저에서 새 디자인 육안 확인(폰트/색/선택 토글/ㅇㅈ), admin에서 질문+선택지별 상세가정으로 게임 생성 → 메인 노출 확인.
+- **후속(별도)**: 날짜기반 모델에 맞춘 롤오버 함수 재설계(현재 `status='active'` 의존 → 명예의전당 집계 정지). 라이브 테스트 필요.
+
+---
+
+## (이전) MVP 구현 상황 (2026-07-13)
 
 **Task 1~19 전부 구현 완료 + 태스크별 리뷰 통과 + 최종 전체 브랜치 리뷰 통과.**
 전부 `main`에 커밋되어 origin(MS-Won/Balance)에 푸시됨. 정적 검증 전부 그린:
