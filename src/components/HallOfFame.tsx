@@ -25,6 +25,7 @@ export function HallOfFame({ entries }: { entries: HallOfFameEntry[] }) {
           </div>
         ))
       )}
+      <div className="hof-note">매일 자정, 승리한 의견의 대표자는 명예의 전당에 등록됩니다!</div>
     </div>
   );
 }

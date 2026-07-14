@@ -511,6 +511,12 @@ body {
   text-align: center;
   font-size: 14px;
 }
+.hof-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 10px;
+}
 
 /* generic hint / states */
 .hint {
