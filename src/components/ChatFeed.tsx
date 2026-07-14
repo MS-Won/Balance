@@ -9,15 +9,19 @@ export function ChatFeed({
   endorsementCounts,
   myEndorsedIds,
   deviceId,
+  showNicknameChange,
   onEndorse,
   onDelete,
+  onChangeNickname,
 }: {
   messages: ChatMessage[];
   endorsementCounts: Record<string, number>;
   myEndorsedIds: Set<string>;
   deviceId: string;
+  showNicknameChange: boolean;
   onEndorse: (messageId: string) => void;
   onDelete: (messageId: string) => void;
+  onChangeNickname: () => void;
 }) {
   const [sortByEndorsements, setSortByEndorsements] = useState(false);
 
@@ -30,14 +34,21 @@ export function ChatFeed({
   return (
     <div>
       <div className="sectionlabel">
-        의견을 써주세요 :)
-        <button
-          type="button"
-          className="sort"
-          onClick={() => setSortByEndorsements((v) => !v)}
-        >
-          {sortByEndorsements ? "인정순 ▾" : "최신순 ▾"}
-        </button>
+        LIVE Chat🔴
+        <span className="sectionlabel-actions">
+          {showNicknameChange && (
+            <button type="button" className="nick-change" onClick={onChangeNickname}>
+              닉네임 변경
+            </button>
+          )}
+          <button
+            type="button"
+            className="sort"
+            onClick={() => setSortByEndorsements((v) => !v)}
+          >
+            {sortByEndorsements ? "인정순 ▾" : "최신순 ▾"}
+          </button>
+        </span>
       </div>
       <div className="chatlist">
         {sorted.map((message) => (

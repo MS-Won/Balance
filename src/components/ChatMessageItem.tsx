@@ -23,7 +23,14 @@ export function ChatMessageItem({
         <div className="nick">{message.nickname}</div>
         <div className="txt">{message.content}</div>
         {isOwn && (
-          <button type="button" className="msgdelete" onClick={onDelete} aria-label="메시지 삭제">
+          <button
+            type="button"
+            className="msgdelete"
+            onClick={() => {
+              if (window.confirm("삭제하시겠습니까?")) onDelete();
+            }}
+            aria-label="메시지 삭제"
+          >
             🗑
           </button>
         )}

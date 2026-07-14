@@ -70,22 +70,13 @@ export default function Home() {
             endorsementCounts={counts}
             myEndorsedIds={myEndorsedIds}
             deviceId={typeof window !== "undefined" ? getDeviceId() : ""}
+            showNicknameChange={!!nickname}
             onEndorse={(messageId) =>
               myEndorsedIds.has(messageId) ? unendorse(messageId) : endorse(messageId)
             }
             onDelete={deleteMessage}
+            onChangeNickname={() => setChangingNickname(true)}
           />
-          {nickname && (
-            <div className="chat-toolbar">
-              <button
-                type="button"
-                className="nick-change"
-                onClick={() => setChangingNickname(true)}
-              >
-                닉네임 변경
-              </button>
-            </div>
-          )}
           <ChatInput
             disabled={!myChoice || !nickname}
             onSend={(content) => myChoice && sendMessage(content, myChoice)}

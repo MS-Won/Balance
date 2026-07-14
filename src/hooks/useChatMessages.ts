@@ -75,11 +75,14 @@ export function useChatMessages(gameId: string | undefined) {
 
   async function deleteMessage(messageId: string) {
     const supabase = getBrowserSupabaseClient();
-    await supabase
+    const { error } = await supabase
       .from("chat_messages")
       .delete()
       .eq("id", messageId)
       .eq("device_id", getDeviceId());
+    // Remove locally right away rather than waiting for the realtime echo,
+    // which may be delayed or (pre-0010 migration) never arrive at all.
+    if (!error) setMessages((prev) => prev.filter((m) => m.id !== messageId));
   }
 
   return { messages, sendMessage, deleteMessage };

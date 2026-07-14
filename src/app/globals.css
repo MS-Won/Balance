@@ -298,6 +298,11 @@ body {
   justify-content: space-between;
   align-items: center;
 }
+.sectionlabel-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .sectionlabel .sort {
   font-family: var(--font-base);
   font-weight: 600;
@@ -394,11 +399,6 @@ body {
   font-size: 10px;
   font-weight: 800;
   margin-top: 3px;
-}
-.chat-toolbar {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 8px;
 }
 .nick-change {
   border: none;
