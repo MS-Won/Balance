@@ -54,7 +54,7 @@ export function ShareBar({ question }: { question: string | null }) {
     <div className="sharebar">
       {kakaoKey && (
         <Script
-          src="https://developers.kakao.com/sdk/js/kakao.js"
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.1/kakao.min.js"
           onLoad={() => {
             if (window.Kakao && !window.Kakao.isInitialized()) window.Kakao.init(kakaoKey);
           }}

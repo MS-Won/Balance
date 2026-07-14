@@ -10,6 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "오늘의 밸런스",
     description,
     openGraph: {
+      type: "website",
+      url: "/",
       title: "오늘의 밸런스",
       description,
       images: ["/opengraph-image"],
