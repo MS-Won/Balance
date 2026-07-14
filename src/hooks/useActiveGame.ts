@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getTodayKST } from "@/lib/kstDate";
+import { msUntilNextMidnightKST } from "@/lib/countdown";
 import type { Database } from "@/types/database";
 
 export type BalanceGame = Database["public"]["Tables"]["balance_games"]["Row"];
@@ -47,8 +48,24 @@ export function useActiveGame() {
       )
       .subscribe();
 
+    // Don't rely solely on a DB write to trigger the reload above — the
+    // rollover cron only touches balance_games when there's something to
+    // aggregate, so a quiet midnight (nothing to roll over) would otherwise
+    // leave an open tab showing yesterday's game/chat. Re-check directly at
+    // the KST midnight boundary, then keep rescheduling for the next one so
+    // a tab left open across multiple days keeps rolling over.
+    let midnightTimer: ReturnType<typeof setTimeout>;
+    function scheduleMidnightReload() {
+      midnightTimer = setTimeout(() => {
+        load();
+        scheduleMidnightReload();
+      }, msUntilNextMidnightKST() + 1000);
+    }
+    scheduleMidnightReload();
+
     return () => {
       cancelled = true;
+      clearTimeout(midnightTimer);
       supabase.removeChannel(channel);
     };
   }, []);
