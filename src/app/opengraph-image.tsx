@@ -22,55 +22,38 @@ export default async function OpengraphImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          background: "#fffaf6",
           fontFamily: "Pretendard",
         }}
       >
         <div
           style={{
-            textAlign: "center",
-            fontSize: 44,
-            color: "#1e2024",
-            padding: "40px 0 28px",
+            flex: 1,
+            background: "#ff6b54",
             display: "flex",
+            alignItems: "center",
             justifyContent: "center",
-            width: "100%",
+            color: "#fff",
+            fontSize: 64,
+            textAlign: "center",
+            padding: "0 30px",
           }}
         >
-          오늘의 밸런스
+          {game?.choice_a_label ?? "A"}
         </div>
-        <div style={{ flex: 1, display: "flex" }}>
-          <div
-            style={{
-              flex: 1,
-              background: "#ff6b54",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: 58,
-              textAlign: "center",
-              padding: "0 30px",
-            }}
-          >
-            {game?.choice_a_label ?? "A"}
-          </div>
-          <div
-            style={{
-              flex: 1,
-              background: "#18be9f",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: 58,
-              textAlign: "center",
-              padding: "0 30px",
-            }}
-          >
-            {game?.choice_b_label ?? "B"}
-          </div>
+        <div
+          style={{
+            flex: 1,
+            background: "#18be9f",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontSize: 64,
+            textAlign: "center",
+            padding: "0 30px",
+          }}
+        >
+          {game?.choice_b_label ?? "B"}
         </div>
       </div>
     ),
