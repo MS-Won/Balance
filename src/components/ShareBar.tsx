@@ -2,6 +2,17 @@
 
 import Script from "next/script";
 import { useState } from "react";
+import { getTodayKST } from "@/lib/kstDate";
+
+// KakaoTalk (and most messengers) cache a URL's link preview the first time
+// it's scraped. Appending today's date makes each day's share a "new" URL,
+// so the preview is re-scraped (and shows that day's game) instead of
+// serving a stale cached image/description from a previous day.
+function shareUrl(): string {
+  const url = new URL(window.location.href);
+  url.searchParams.set("d", getTodayKST());
+  return url.toString();
+}
 
 declare global {
   interface Window {
@@ -32,7 +43,7 @@ export function ShareBar({ question }: { question: string | null }) {
       alert("카카오톡 공유 준비 중이에요. 잠시 후 다시 시도해주세요.");
       return;
     }
-    const url = window.location.href;
+    const url = shareUrl();
     window.Kakao.Share.sendDefault({
       objectType: "feed",
       content: {
@@ -45,7 +56,7 @@ export function ShareBar({ question }: { question: string | null }) {
   }
 
   async function copyUrl() {
-    await navigator.clipboard.writeText(window.location.href);
+    await navigator.clipboard.writeText(shareUrl());
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
