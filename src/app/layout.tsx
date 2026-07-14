@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://balance-game-mvp.vercel.app"),
   title: "오늘의 밸런스",
   description: "매일 자정, 세상은 둘로 갈린다 — 오늘의 밸런스 게임",
 };

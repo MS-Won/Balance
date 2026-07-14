@@ -2,16 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase/client";
+import { getTodayKST } from "@/lib/kstDate";
 import type { Database } from "@/types/database";
 
 export type BalanceGame = Database["public"]["Tables"]["balance_games"]["Row"];
-
-// Today's date (YYYY-MM-DD) in KST, regardless of the viewer's local timezone.
-// 'en-CA' formats as YYYY-MM-DD, which sorts and compares correctly against the
-// balance_games.date column.
-function getTodayKST(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
-}
 
 export function useActiveGame() {
   const [game, setGame] = useState<BalanceGame | null>(null);

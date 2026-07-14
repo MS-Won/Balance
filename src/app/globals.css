@@ -439,6 +439,28 @@ body {
   opacity: 0.4;
   cursor: default;
 }
+.sharebar {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.share {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.share.kakao {
+  background: #fee500;
+  color: #191600;
+}
+.share.copy {
+  background: var(--line);
+  color: var(--ink);
+}
 
 /* hall of fame */
 .hof .title {
