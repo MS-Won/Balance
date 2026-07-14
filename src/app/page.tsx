@@ -26,6 +26,7 @@ export default function Home() {
   const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
   const { entries } = useHallOfFame();
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
+  const [changingNickname, setChangingNickname] = useState(false);
 
   const { a: repA, b: repB } = computeRepresentativeOpinions(
     messages as RepresentativeOpinionMessage[],
@@ -42,7 +43,7 @@ export default function Home() {
 
   return (
     <main className="app">
-      <Header />
+      <Header nickname={nickname} onChangeNickname={() => setChangingNickname(true)} />
 
       {loading && <p className="hint">우주의 균형을 재는 중…</p>}
       {!loading && !game && (
@@ -78,12 +79,15 @@ export default function Home() {
 
       <HallOfFame entries={entries} />
 
-      {nickname === null && (
+      {(nickname === null || changingNickname) && (
         <NicknamePrompt
+          initialValue={nickname ?? ""}
           onSet={(value) => {
             persistNickname(value);
             setNicknameState(value);
+            setChangingNickname(false);
           }}
+          onCancel={nickname !== null ? () => setChangingNickname(false) : undefined}
         />
       )}
     </main>

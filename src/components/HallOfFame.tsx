@@ -7,7 +7,7 @@ export function HallOfFame({ entries }: { entries: HallOfFameEntry[] }) {
     <div className="card hof">
       <div className="title">🏆 명예의 전당</div>
       {entries.length === 0 ? (
-        <div className="empty">아직 전설이 된 자가 없습니다</div>
+        <div className="empty">아직 없어요...</div>
       ) : (
         entries.map((entry, i) => (
           <div key={entry.id} className="item">

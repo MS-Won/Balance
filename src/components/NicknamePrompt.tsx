@@ -2,8 +2,16 @@
 
 import { useState } from "react";
 
-export function NicknamePrompt({ onSet }: { onSet: (nickname: string) => void }) {
-  const [value, setValue] = useState("");
+export function NicknamePrompt({
+  onSet,
+  onCancel,
+  initialValue = "",
+}: {
+  onSet: (nickname: string) => void;
+  onCancel?: () => void;
+  initialValue?: string;
+}) {
+  const [value, setValue] = useState(initialValue);
 
   function submit() {
     const trimmed = value.trim();
@@ -23,7 +31,12 @@ export function NicknamePrompt({ onSet }: { onSet: (nickname: string) => void })
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="닉네임"
         />
-        <button onClick={submit}>시작하기</button>
+        <button onClick={submit}>{onCancel ? "변경하기" : "시작하기"}</button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="cancel">
+            취소
+          </button>
+        )}
       </div>
     </div>
   );
