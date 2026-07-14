@@ -9,22 +9,38 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
-## 현재 진행 상황 (2026-07-14 갱신 — 디자인 리디자인 v1 완료)
+## 현재 진행 상황 (2026-07-14 갱신 — 날짜기반 롤오버 재설계 계획 완료, 구현 대기)
 
-**메인 `/` 전면 리디자인 v1 구현 완료 + origin 푸시.** 디자인 스펙: `design.md`, 목업: `docs/design-mockup.html`.
-- 컨셉: 데드팬/부조리 + 라이트&에어리(HydroTrack 무드). 코랄(A)/민트(B).
-- 폰트: **Black Han Sans**(선택지·숫자·ㅇㅈ) + **Jua**(질문·라벨) — `src/app/layout.tsx`에서 구글폰트 `<link>`로 로드
-  (이 PC는 Node TLS 가로채기 때문에 빌드 시 `next/font`가 실패할 수 있어 `<link>` 채택. lint 경고 1건 `no-page-custom-font`는 무해).
-- 신규 `BalanceCard`(질문 + 좌/우 선택지=투표버튼 + 풀블리드 투표바), ㅇㅈ 워드아트로 👍 전면 교체.
-- 선택지별 상세가정: `choice_a_description`/`choice_b_description` 컬럼(**마이그레이션 0006, 운영 적용 완료**) + admin 폼/`createGame`/메인 표시.
-  질문/선택지 줄바꿈은 CSS `text-wrap:balance`로 자동 처리(admin에서 한 줄 입력).
-- 제거: `YesterdayResult`(어제의 결과), `AdPlaceholder`(광고), `VoteGraph`.
-- 정적 게이트 그린: tsc 0 · test 12/12 · lint 0 error(경고 1). dev 스모크 `/`·`/admin/login` 200, 런타임 에러 없음.
-- **마이그레이션 0005(question)·0006(choice descriptions) 모두 운영 DB(usqxzkggksqoceileqbt)에 적용 완료.**
+**이번 세션: 날짜기반 롤오버 재설계를 브레인스토밍→스펙→구현계획까지 확정하고 커밋·푸시함. 코드 구현은 아직 시작 안 함(다음 세션의 첫 작업).**
 
-### 남은 일 (사람 확인)
+### 왜 하는가 (확정된 문제 진단)
+- 메인은 날짜기반 모델로 전환됨: `useActiveGame`(`src/hooks/useActiveGame.ts:31-37`)이 "현재 게임"을 `date <= 오늘(KST)` 중 최신으로 고름. `status` 미사용.
+- 게임은 `status='scheduled'`로만 생성(`src/app/admin/actions.ts:56`)되고 앱은 status를 절대 안 바꿈.
+- 그런데 롤오버 함수(`supabase/migrations/0002_rollover_function.sql:19`)는 여전히 `where status='active'` → 항상 not found → early return → **명예의전당(hall_of_fame) 집계가 영구 정지 상태**. 이걸 고치는 작업.
+
+### 확정된 설계 결정 (다시 물어볼 필요 없음)
+- **멱등성 마커**: `balance_games`에 `aggregated_at timestamptz` 컬럼 추가. 집계 시 마킹, 마킹된 게임은 스킵. (hall_of_fame 행 존재 여부 방식은 top-10 트림에 밀리면 재집계되는 약점이 있어 기각.)
+- **백필**: 마이그레이션 시점에 `date < 오늘(KST)`인 기존 게임을 `aggregated_at=now()`로 설정 → 짜장면/짬뽕 등 과거 데이터 소급 재집계 방지.
+- **알고리즘**: 현재 게임(`date<=오늘` 중 최신)보다 이전 날짜 + `aggregated_at IS NULL`인 게임을 date 오름차순 순회 집계(보통 0~1건, 크론 다운 시 밀린 것 따라잡음). 대표의견 유무와 무관하게 항상 마킹(무한 재시도 방지).
+- **status 로직 전부 제거**(active/ended 전환·다음 게임 승격 삭제). status 컬럼 자체는 레거시로 방치. **admin의 stale한 status 표시 개선은 이번 범위 밖(별도 후속).**
+- **cron 미변경**: `create or replace function`만. 크론 잡 `midnight-rollover`(`0 15 * * *`=KST자정)는 같은 함수명 계속 호출.
+- KST 오늘 날짜 식: `(now() at time zone 'Asia/Seoul')::date` (프론트 `Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'})`와 동일).
+
+### 산출물 (이번 세션 커밋됨, origin 푸시 완료)
+- 스펙: `docs/superpowers/specs/2026-07-14-date-based-rollover-design.md`
+- 구현 계획: `docs/superpowers/plans/2026-07-14-date-based-rollover.md` (3개 태스크, 각 스텝에 완전한 SQL 포함)
+
+### 다음 세션에서 할 일 (여기서부터 이어서)
+1. **구현 계획 실행** — `docs/superpowers/plans/2026-07-14-date-based-rollover.md`의 Task 1→2→3.
+   - Task 1: `supabase/verify/date_based_rollover_check.sql` 작성(격리 fixture, begin/rollback, 4시나리오: 정상·멱등·빈날·대표없음). 계획서에 전체 SQL 있음.
+   - Task 2: `supabase/migrations/0007_date_based_rollover.sql` 작성(컬럼+백필+함수 재작성). 계획서에 전체 SQL 있음.
+   - Task 3: `npx supabase db push` → `npx supabase db query --linked --file supabase/verify/date_based_rollover_check.sql`(exit 0=통과) → `src/types/database.ts`에 `aggregated_at` 수동 추가(gen types가 이 PC TLS로 실패 가능) → tsc/test 확인 → 커밋.
+   - **실행 방식 미정(사용자 결정 대기)**: subagent-driven(프로젝트 관행) vs inline(제 추천 — 규모 작고 라이브 CLI에 묶여 있음). 다음 세션 시작 시 이 하나만 확인하면 됨.
+2. **그 다음: 앱을 실제 URL로 배포** (사용자 요청 "1번 진행 후 url 실제 배포"). 아직 배포 인프라(Vercel 등) 미설정 — 방식 논의 필요.
+
+### 그 외 남은 일 (사람 확인, 기존)
 - 브라우저에서 새 디자인 육안 확인(폰트/색/선택 토글/ㅇㅈ), admin에서 질문+선택지별 상세가정으로 게임 생성 → 메인 노출 확인.
-- **후속(별도)**: 날짜기반 모델에 맞춘 롤오버 함수 재설계(현재 `status='active'` 의존 → 명예의전당 집계 정지). 라이브 테스트 필요.
+- 마이그레이션 0005(question)·0006(choice descriptions)는 이미 운영 DB(usqxzkggksqoceileqbt) 적용 완료. (0007은 아직 미적용 — 위 Task 3에서 적용)
 
 ---
 
