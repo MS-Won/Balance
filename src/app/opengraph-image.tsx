@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { ImageResponse } from "next/og";
 import { getActiveGameServer } from "@/lib/getActiveGameServer";
 
@@ -8,7 +10,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OpengraphImage() {
-  const game = await getActiveGameServer();
+  const [game, fontData] = await Promise.all([
+    getActiveGameServer(),
+    readFile(path.join(process.cwd(), "src/app/fonts/Pretendard-ExtraBold.ttf")),
+  ]);
 
   return new ImageResponse(
     (
@@ -19,16 +24,15 @@ export default async function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           background: "#fffaf6",
-          fontFamily: "sans-serif",
+          fontFamily: "Pretendard",
         }}
       >
         <div
           style={{
             textAlign: "center",
             fontSize: 44,
-            fontWeight: 800,
             color: "#1e2024",
-            padding: "36px 0 8px",
+            padding: "40px 0 28px",
             display: "flex",
             justifyContent: "center",
             width: "100%",
@@ -36,21 +40,6 @@ export default async function OpengraphImage() {
         >
           오늘의 밸런스
         </div>
-        {game?.question && (
-          <div
-            style={{
-              textAlign: "center",
-              fontSize: 30,
-              color: "#6b6b6b",
-              padding: "0 60px 28px",
-              display: "flex",
-              justifyContent: "center",
-              width: "100%",
-            }}
-          >
-            Q. {game.question}
-          </div>
-        )}
         <div style={{ flex: 1, display: "flex" }}>
           <div
             style={{
@@ -61,7 +50,6 @@ export default async function OpengraphImage() {
               justifyContent: "center",
               color: "#fff",
               fontSize: 58,
-              fontWeight: 800,
               textAlign: "center",
               padding: "0 30px",
             }}
@@ -77,7 +65,6 @@ export default async function OpengraphImage() {
               justifyContent: "center",
               color: "#fff",
               fontSize: 58,
-              fontWeight: 800,
               textAlign: "center",
               padding: "0 30px",
             }}
@@ -87,6 +74,9 @@ export default async function OpengraphImage() {
         </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [{ name: "Pretendard", data: fontData, style: "normal", weight: 800 }],
+    }
   );
 }
