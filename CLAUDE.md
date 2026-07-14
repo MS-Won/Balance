@@ -9,9 +9,29 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
-## 현재 진행 상황 (2026-07-14 갱신 — 날짜기반 롤오버 재설계 계획 완료, 구현 대기)
+## 현재 진행 상황 (2026-07-14 갱신 — 날짜기반 롤오버 구현·라이브 적용·검증 완료)
 
-**이번 세션: 날짜기반 롤오버 재설계를 브레인스토밍→스펙→구현계획까지 확정하고 커밋·푸시함. 코드 구현은 아직 시작 안 함(다음 세션의 첫 작업).**
+**이번 세션: 날짜기반 롤오버 구현 계획(Task 1~3)을 `superpowers:subagent-driven-development`로 전부 실행 완료.
+운영 DB(usqxzkggksqoceileqbt)에 마이그레이션 0007 적용 완료, 라이브 검증 통과(exit 0), 타입 반영,
+최종 전체 브랜치 리뷰(opus) 통과. 전부 커밋되어 origin main에 푸시 완료
+(`3fef3fb..376cd57`, 4개 커밋: 검증SQL→마이그레이션→타입→stale 검증스크립트 정리).**
+
+**hall_of_fame 집계 정지 버그는 이제 라이브에서 수정된 상태.** 다음 자정(KST) 크론 실행부터
+정상 동작해야 함 (사람이 며칠 뒤 hall_of_fame에 새 행이 쌓이는지 확인해볼 것 — 자동 확인 불가한 항목).
+
+### 이번 세션 실행 요약
+- Task 1: `supabase/verify/date_based_rollover_check.sql` 작성 — 리뷰 clean.
+- Task 2: `supabase/migrations/0007_date_based_rollover.sql` 작성 — 리뷰 clean, Task 1 스크립트와 시나리오별 교차검증 통과.
+- Task 3: 컨트롤러가 직접 실행(라이브 시크릿이 필요해 서브에이전트에 토큰을 넘기지 않기 위함) — 사용자 확인 후 `db push` 적용,
+  라이브 검증 exit 0, `src/types/database.ts`에 `aggregated_at` 수동 반영, tsc/test 그린. 리뷰어가 tsc/test 독립 재실행으로 확인.
+- 최종 전체 브랜치 리뷰(opus): Important 1건 발견 — 구 status 기반 `supabase/verify/rollover_check.sql`이
+  삭제된 로직을 테스트하는 채로 남아있어 실행 시 무조건 실패하는 상태였음 → 삭제 커밋(`376cd57`)으로 수정 완료.
+  Minor 3건(top-10 트림 축출 시나리오 미검증 등)은 병합 차단 아님, 후속 과제로 남김.
+
+### 다음 세션에서 할 일 (여기서부터 이어서)
+1. **앱을 실제 URL로 배포** (사용자 요청 "롤오버 완료 후 url 실제 배포"). 아직 배포 인프라(Vercel 등) 미설정 — 방식 논의 필요.
+2. (선택/후속) 최종 리뷰의 Minor 항목: top-10 트림 축출 시나리오를 검증 스크립트에 추가할지 결정.
+3. (선택/후속) admin의 stale한 status 표시 정리 — 이번 롤오버 작업 범위 밖으로 명시적으로 미룸.
 
 ### 왜 하는가 (확정된 문제 진단)
 - 메인은 날짜기반 모델로 전환됨: `useActiveGame`(`src/hooks/useActiveGame.ts:31-37`)이 "현재 게임"을 `date <= 오늘(KST)` 중 최신으로 고름. `status` 미사용.
@@ -86,6 +106,10 @@ createGame 서버측 입력검증·에러 UX, 롤오버 단일-active 가드, Ho
 - **CLI 인증:** `supabase link`/`db push`/`gen types --linked`/`db query --linked`는 `SUPABASE_ACCESS_TOKEN` 환경변수(개인 액세스 토큰, https://supabase.com/dashboard/account/tokens 에서 발급)가 필요합니다. 이 토큰은 어디에도 커밋하지 않습니다 — 새 PC에서는 새로 발급하거나 안전하게 전달받아야 합니다.
 - **`.env.local`은 git에 없습니다** (당연히 gitignore 대상). 새 PC에서 작업하려면 `.env.local.example`을 복사해서 Supabase 대시보드(Project Settings → API)에서 `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`를 다시 채워야 합니다.
 - **네트워크 특이사항 (이 PC에서만 해당):** 현재 개발 PC의 네트워크가 일부 HTTPS 트래픽을 자체 루트 인증서로 가로챕니다 (Node/Go 바이너리가 신뢰 안 함). 이 문제가 있는 PC라면 `README.md`의 "Local development" 섹션에 있는 `NODE_EXTRA_CA_CERTS`/`SSL_CERT_FILE` 안내를 참고하세요. 다른 PC(다른 네트워크)에서는 이 문제가 없을 수 있습니다.
+  이 PC에서 가로채는 루트 인증서는 Windows 신뢰 루트 저장소에 `CN=ADD, O=ADD, C=KR`로 이미 설치되어 있습니다.
+  PowerShell로 바로 PEM으로 추출 가능: `Get-ChildItem Cert:\LocalMachine\Root | Where-Object {$_.Subject -like '*ADD*'}`로 지문(thumbprint) 확인 후,
+  `Export()`한 바이트를 base64로 감싸 PEM 헤더/푸터를 붙이면 됨. 그 PEM 경로를 `NODE_EXTRA_CA_CERTS`/`SSL_CERT_FILE`에 지정하면
+  `supabase link`/`db push`/`db query --linked`가 정상 동작함 (2026-07-14 세션에서 이 방법으로 해결).
 
 ## 작업 재개 방법
 
