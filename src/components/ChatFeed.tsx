@@ -8,12 +8,16 @@ export function ChatFeed({
   messages,
   endorsementCounts,
   myEndorsedIds,
+  deviceId,
   onEndorse,
+  onDelete,
 }: {
   messages: ChatMessage[];
   endorsementCounts: Record<string, number>;
   myEndorsedIds: Set<string>;
+  deviceId: string;
   onEndorse: (messageId: string) => void;
+  onDelete: (messageId: string) => void;
 }) {
   const [sortByEndorsements, setSortByEndorsements] = useState(false);
 
@@ -32,7 +36,7 @@ export function ChatFeed({
           className="sort"
           onClick={() => setSortByEndorsements((v) => !v)}
         >
-          {sortByEndorsements ? "ㅇㅈ순 ▾" : "최신순 ▾"}
+          {sortByEndorsements ? "인정순 ▾" : "최신순 ▾"}
         </button>
       </div>
       <div className="chatlist">
@@ -42,7 +46,9 @@ export function ChatFeed({
             message={message}
             endorsementCount={endorsementCounts[message.id] ?? 0}
             endorsed={myEndorsedIds.has(message.id)}
+            isOwn={message.device_id === deviceId}
             onEndorse={() => onEndorse(message.id)}
+            onDelete={() => onDelete(message.id)}
           />
         ))}
       </div>

@@ -4,12 +4,16 @@ export function ChatMessageItem({
   message,
   endorsementCount,
   endorsed,
+  isOwn,
   onEndorse,
+  onDelete,
 }: {
   message: ChatMessage;
   endorsementCount: number;
   endorsed: boolean;
+  isOwn: boolean;
   onEndorse: () => void;
+  onDelete: () => void;
 }) {
   const isA = message.choice === "A";
   return (
@@ -18,6 +22,11 @@ export function ChatMessageItem({
       <div className="bubble">
         <div className="nick">{message.nickname}</div>
         <div className="txt">{message.content}</div>
+        {isOwn && (
+          <button type="button" className="msgdelete" onClick={onDelete} aria-label="메시지 삭제">
+            🗑
+          </button>
+        )}
       </div>
       <button
         type="button"

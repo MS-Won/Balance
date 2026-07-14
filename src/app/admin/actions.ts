@@ -59,6 +59,28 @@ export async function createGame(formData: FormData) {
   if (error) throw error;
 }
 
+export async function updateGame(id: string, formData: FormData) {
+  await assertAdmin();
+  const supabase = getAdminSupabaseClient();
+  const { error } = await supabase
+    .from("balance_games")
+    .update({
+      date: String(formData.get("date")),
+      question: formData.get("question") ? String(formData.get("question")) : null,
+      description: formData.get("description") ? String(formData.get("description")) : null,
+      choice_a_label: String(formData.get("choice_a_label")),
+      choice_a_description: formData.get("choice_a_description")
+        ? String(formData.get("choice_a_description"))
+        : null,
+      choice_b_label: String(formData.get("choice_b_label")),
+      choice_b_description: formData.get("choice_b_description")
+        ? String(formData.get("choice_b_description"))
+        : null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function deleteGame(id: string) {
   await assertAdmin();
   const supabase = getAdminSupabaseClient();

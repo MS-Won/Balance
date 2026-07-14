@@ -47,7 +47,6 @@ body {
 
 /* header */
 .bg-header {
-  position: relative;
   background: linear-gradient(135deg, #ff8a73, #ff6b54 55%, #f4553d);
   color: #fff;
   border-radius: var(--radius);
@@ -56,19 +55,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-.nick-change {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  border: none;
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-family: var(--font-base);
-  font-size: 10px;
-  cursor: pointer;
 }
 .bg-brand {
   font-family: var(--font-hand);
@@ -344,6 +330,7 @@ body {
   background: var(--mint);
 }
 .bubble {
+  position: relative;
   flex: 1;
   min-width: 0;
   background: #fff;
@@ -361,6 +348,22 @@ body {
   font-size: 13px;
   line-height: 1.4;
   word-break: break-word;
+  padding-right: 18px;
+}
+.msgdelete {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: none;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.4;
+  cursor: pointer;
+  padding: 2px;
+}
+.msgdelete:hover {
+  opacity: 0.8;
 }
 .endorse {
   flex: none;
@@ -394,6 +397,21 @@ body {
   font-size: 10px;
   font-weight: 800;
   margin-top: 3px;
+}
+.chat-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+.nick-change {
+  border: none;
+  background: var(--line);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--font-base);
+  font-size: 10px;
+  cursor: pointer;
 }
 .chatinput {
   display: flex;

@@ -34,6 +34,22 @@ export function useChatMessages(gameId: string | undefined) {
           setMessages((prev) => [...prev, payload.new as ChatMessage]);
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "chat_messages", filter: `game_id=eq.${gameId}` },
+        (payload) => {
+          const updated = payload.new as ChatMessage;
+          setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "chat_messages", filter: `game_id=eq.${gameId}` },
+        (payload) => {
+          const deletedId = (payload.old as Partial<ChatMessage>).id;
+          setMessages((prev) => prev.filter((m) => m.id !== deletedId));
+        }
+      )
       .subscribe();
 
     return () => {
@@ -57,5 +73,14 @@ export function useChatMessages(gameId: string | undefined) {
     });
   }
 
-  return { messages, sendMessage };
+  async function deleteMessage(messageId: string) {
+    const supabase = getBrowserSupabaseClient();
+    await supabase
+      .from("chat_messages")
+      .delete()
+      .eq("id", messageId)
+      .eq("device_id", getDeviceId());
+  }
+
+  return { messages, sendMessage, deleteMessage };
 }

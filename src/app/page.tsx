@@ -5,7 +5,8 @@ import { Header } from "@/components/Header";
 import { BalanceCard } from "@/components/BalanceCard";
 import { useActiveGame } from "@/hooks/useActiveGame";
 import { useVotes } from "@/hooks/useVotes";
-import { getNickname, setNickname as persistNickname } from "@/lib/deviceIdentity";
+import { getDeviceId, getNickname, setNickname as persistNickname } from "@/lib/deviceIdentity";
+import { renameChatHistory } from "@/lib/renameChatHistory";
 import { NicknamePrompt } from "@/components/NicknamePrompt";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import { useEndorsements } from "@/hooks/useEndorsements";
@@ -22,7 +23,7 @@ import { HallOfFame } from "@/components/HallOfFame";
 export default function Home() {
   const { game, loading } = useActiveGame();
   const { tally, myChoice, castVote } = useVotes(game?.id);
-  const { messages, sendMessage } = useChatMessages(game?.id);
+  const { messages, sendMessage, deleteMessage } = useChatMessages(game?.id);
   const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
   const { entries } = useHallOfFame();
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
@@ -43,7 +44,7 @@ export default function Home() {
 
   return (
     <main className="app">
-      <Header nickname={nickname} onChangeNickname={() => setChangingNickname(true)} />
+      <Header />
 
       {loading && <p className="hint">우주의 균형을 재는 중…</p>}
       {!loading && !game && (
@@ -68,8 +69,21 @@ export default function Home() {
             messages={messages}
             endorsementCounts={counts}
             myEndorsedIds={myEndorsedIds}
+            deviceId={typeof window !== "undefined" ? getDeviceId() : ""}
             onEndorse={endorse}
+            onDelete={deleteMessage}
           />
+          {nickname && (
+            <div className="chat-toolbar">
+              <button
+                type="button"
+                className="nick-change"
+                onClick={() => setChangingNickname(true)}
+              >
+                닉네임 변경
+              </button>
+            </div>
+          )}
           <ChatInput
             disabled={!myChoice || !nickname}
             onSend={(content) => myChoice && sendMessage(content, myChoice)}
@@ -84,6 +98,7 @@ export default function Home() {
           initialValue={nickname ?? ""}
           onSet={(value) => {
             persistNickname(value);
+            if (nickname) renameChatHistory(getDeviceId(), value);
             setNicknameState(value);
             setChangingNickname(false);
           }}
