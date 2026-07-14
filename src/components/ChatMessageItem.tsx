@@ -28,12 +28,7 @@ export function ChatMessageItem({
           </button>
         )}
       </div>
-      <button
-        type="button"
-        className={`endorse${endorsed ? " on" : ""}`}
-        onClick={onEndorse}
-        disabled={endorsed}
-      >
+      <button type="button" className={`endorse${endorsed ? " on" : ""}`} onClick={onEndorse}>
         <span className="oj">ㅇㅈ</span>
         <span className="c">{endorsementCount}</span>
       </button>

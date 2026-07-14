@@ -24,7 +24,7 @@ export default function Home() {
   const { game, loading } = useActiveGame();
   const { tally, myChoice, castVote } = useVotes(game?.id);
   const { messages, sendMessage, deleteMessage } = useChatMessages(game?.id);
-  const { counts, myEndorsedIds, endorse } = useEndorsements(game?.id);
+  const { counts, myEndorsedIds, endorse, unendorse } = useEndorsements(game?.id);
   const { entries } = useHallOfFame();
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
   const [changingNickname, setChangingNickname] = useState(false);
@@ -70,7 +70,9 @@ export default function Home() {
             endorsementCounts={counts}
             myEndorsedIds={myEndorsedIds}
             deviceId={typeof window !== "undefined" ? getDeviceId() : ""}
-            onEndorse={endorse}
+            onEndorse={(messageId) =>
+              myEndorsedIds.has(messageId) ? unendorse(messageId) : endorse(messageId)
+            }
             onDelete={deleteMessage}
           />
           {nickname && (

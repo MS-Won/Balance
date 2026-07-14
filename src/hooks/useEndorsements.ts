@@ -45,6 +45,16 @@ export function useEndorsements(gameId: string | undefined) {
     await supabase.from("endorsements").insert({ message_id: messageId, device_id: deviceId });
   }
 
+  async function unendorse(messageId: string) {
+    const supabase = getBrowserSupabaseClient();
+    const deviceId = getDeviceId();
+    await supabase
+      .from("endorsements")
+      .delete()
+      .eq("message_id", messageId)
+      .eq("device_id", deviceId);
+  }
+
   const deviceId = typeof window !== "undefined" ? getDeviceId() : "";
   const counts: Record<string, number> = {};
   const myEndorsedIds = new Set<string>();
@@ -53,5 +63,5 @@ export function useEndorsements(gameId: string | undefined) {
     if (e.device_id === deviceId) myEndorsedIds.add(e.message_id);
   }
 
-  return { counts, myEndorsedIds, endorse };
+  return { counts, myEndorsedIds, endorse, unendorse };
 }

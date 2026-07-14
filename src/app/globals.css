@@ -390,9 +390,6 @@ body {
 .endorse.on .oj {
   color: #fff;
 }
-.endorse:disabled {
-  cursor: default;
-}
 .endorse .c {
   font-size: 10px;
   font-weight: 800;
