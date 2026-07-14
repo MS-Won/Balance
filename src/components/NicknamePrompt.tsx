@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { getDeviceId } from "@/lib/deviceIdentity";
+import { claimNickname } from "@/lib/claimNickname";
 
 export function NicknamePrompt({
   onSet,
@@ -12,10 +14,22 @@ export function NicknamePrompt({
   initialValue?: string;
 }) {
   const [value, setValue] = useState(initialValue);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function submit() {
+  async function submit() {
     const trimmed = value.trim();
     if (trimmed.length === 0 || trimmed.length > 10) return;
+
+    setError(null);
+    setSubmitting(true);
+    const result = await claimNickname(getDeviceId(), trimmed);
+    setSubmitting(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     onSet(trimmed);
   }
 
@@ -27,11 +41,17 @@ export function NicknamePrompt({
         <input
           value={value}
           maxLength={10}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setError(null);
+          }}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="닉네임"
         />
-        <button onClick={submit}>{onCancel ? "변경하기" : "시작하기"}</button>
+        {error && <p className="nickname-error">{error}</p>}
+        <button onClick={submit} disabled={submitting}>
+          {submitting ? "확인 중..." : onCancel ? "변경하기" : "시작하기"}
+        </button>
         {onCancel && (
           <button type="button" onClick={onCancel} className="cancel">
             취소

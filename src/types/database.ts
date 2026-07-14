@@ -228,6 +228,24 @@ export type Database = {
           },
         ]
       }
+      device_nicknames: {
+        Row: {
+          device_id: string
+          nickname: string
+          updated_at: string
+        }
+        Insert: {
+          device_id: string
+          nickname: string
+          updated_at?: string
+        }
+        Update: {
+          device_id?: string
+          nickname?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
