@@ -47,6 +47,11 @@ export default async function AdminPage() {
           className="border rounded-md w-full px-2 py-1 text-sm"
         />
         <input
+          name="description"
+          placeholder="질문 상세가정 (선택)"
+          className="border rounded-md w-full px-2 py-1 text-sm"
+        />
+        <input
           name="choice_a_label"
           placeholder="선택지 A"
           required

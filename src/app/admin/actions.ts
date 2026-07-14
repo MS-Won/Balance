@@ -45,6 +45,7 @@ export async function createGame(formData: FormData) {
   const { error } = await supabase.from("balance_games").insert({
     date: String(formData.get("date")),
     question: formData.get("question") ? String(formData.get("question")) : null,
+    description: formData.get("description") ? String(formData.get("description")) : null,
     choice_a_label: String(formData.get("choice_a_label")),
     choice_a_description: formData.get("choice_a_description")
       ? String(formData.get("choice_a_description"))

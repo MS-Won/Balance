@@ -2,6 +2,7 @@ import type { VoteTally } from "@/lib/voteTally";
 
 export function BalanceCard({
   question,
+  description,
   aLabel,
   bLabel,
   aDesc,
@@ -11,6 +12,7 @@ export function BalanceCard({
   onVote,
 }: {
   question: string | null;
+  description: string | null;
   aLabel: string;
   bLabel: string;
   aDesc: string | null;
@@ -28,6 +30,7 @@ export function BalanceCard({
     <div className="versus">
       <div className="vparticip">{participLabel}</div>
       {question && <div className="vq">Q. {question}</div>}
+      {description && <div className="vqdesc">({description})</div>}
 
       <div className="cols">
         <button

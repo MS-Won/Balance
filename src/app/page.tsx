@@ -53,6 +53,7 @@ export default function Home() {
         <>
           <BalanceCard
             question={game.question}
+            description={game.description}
             aLabel={game.choice_a_label}
             bLabel={game.choice_b_label}
             aDesc={game.choice_a_description}
