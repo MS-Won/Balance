@@ -7,7 +7,7 @@ export function NicknamePrompt({ onSet }: { onSet: (nickname: string) => void })
 
   function submit() {
     const trimmed = value.trim();
-    if (trimmed.length === 0 || trimmed.length > 20) return;
+    if (trimmed.length === 0 || trimmed.length > 10) return;
     onSet(trimmed);
   }
 
@@ -15,10 +15,10 @@ export function NicknamePrompt({ onSet }: { onSet: (nickname: string) => void })
     <div className="modal-backdrop">
       <div className="modal">
         <h2>어떻게 불러드릴까요?</h2>
-        <p>닉네임을 정하면 균형 전쟁에 참여할 수 있어요. (최대 20자)</p>
+        <p>닉네임을 정하면 &apos;밸런스 게임&apos;에 참여할 수 있어요. (최대 10자)</p>
         <input
           value={value}
-          maxLength={20}
+          maxLength={10}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="닉네임"
