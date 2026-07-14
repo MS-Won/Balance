@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/hooks/useChatMessages";
 import { ChatMessageItem } from "@/components/ChatMessageItem";
 
@@ -24,12 +24,18 @@ export function ChatFeed({
   onChangeNickname: () => void;
 }) {
   const [sortByEndorsements, setSortByEndorsements] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const sorted = sortByEndorsements
     ? [...messages].sort(
         (a, b) => (endorsementCounts[b.id] ?? 0) - (endorsementCounts[a.id] ?? 0)
       )
     : messages;
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [sorted]);
 
   return (
     <div>
@@ -50,7 +56,7 @@ export function ChatFeed({
           </button>
         </span>
       </div>
-      <div className="chatlist">
+      <div className="chatlist" ref={listRef}>
         {sorted.map((message) => (
           <ChatMessageItem
             key={message.id}
