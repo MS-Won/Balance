@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       balance_games: {
         Row: {
+          aggregated_at: string | null
           choice_a_description: string | null
           choice_a_label: string
           choice_b_description: string | null
@@ -53,6 +54,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          aggregated_at?: string | null
           choice_a_description?: string | null
           choice_a_label: string
           choice_b_description?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          aggregated_at?: string | null
           choice_a_description?: string | null
           choice_a_label?: string
           choice_b_description?: string | null
