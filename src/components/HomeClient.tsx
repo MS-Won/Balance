@@ -20,6 +20,7 @@ import {
 } from "@/lib/representativeOpinion";
 import { RepresentativeOpinionBar } from "@/components/RepresentativeOpinionBar";
 import { useHallOfFame } from "@/hooks/useHallOfFame";
+import { useChatBlockStatus } from "@/hooks/useChatBlockStatus";
 import { HallOfFame } from "@/components/HallOfFame";
 
 export function HomeClient() {
@@ -28,6 +29,7 @@ export function HomeClient() {
   const { messages, sendMessage, deleteMessage } = useChatMessages(game?.id);
   const { counts, myEndorsedIds, endorse, unendorse } = useEndorsements(game?.id);
   const { entries } = useHallOfFame();
+  const blocked = useChatBlockStatus(game?.id);
   const [nickname, setNicknameState] = useState<string | null | undefined>(undefined);
   const [changingNickname, setChangingNickname] = useState(false);
 
@@ -81,6 +83,7 @@ export function HomeClient() {
           />
           <ChatInput
             disabled={!myChoice || !nickname}
+            blocked={blocked}
             onSend={(content) => myChoice && sendMessage(content, myChoice)}
           />
           <ShareBar
