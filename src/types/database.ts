@@ -81,6 +81,35 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_blocks: {
+        Row: {
+          blocked_at: string
+          device_id: string
+          game_id: string
+          id: string
+        }
+        Insert: {
+          blocked_at?: string
+          device_id: string
+          game_id: string
+          id?: string
+        }
+        Update: {
+          blocked_at?: string
+          device_id?: string
+          game_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_blocks_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "balance_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           choice: string
