@@ -1,4 +1,14 @@
-import { createGame, deleteGame, listGames, updateGame } from "@/app/admin/actions";
+import {
+  createGame,
+  deleteGame,
+  listGames,
+  updateGame,
+  listChatMessages,
+  listBlockedDeviceIds,
+  deleteChatMessage,
+  blockChatter,
+  unblockChatter,
+} from "@/app/admin/actions";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -13,15 +23,18 @@ function nextDay(dateStr: string): string {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string }>;
+  searchParams: Promise<{ edit?: string; chat?: string }>;
 }) {
-  const { edit: editId } = await searchParams;
+  const { edit: editId, chat: chatGameId } = await searchParams;
   const games = await listGames();
   // Default the date field to the day after the latest registered game.
   // listGames() returns games ordered by date desc, so games[0] is the latest.
   // With no games registered, leave it empty (browser shows mm/dd/yyyy).
   const defaultDate = games[0] ? nextDay(games[0].date) : undefined;
   const editingGame = editId ? games.find((g) => g.id === editId) : undefined;
+  const chatGame = chatGameId ? games.find((g) => g.id === chatGameId) : undefined;
+  const chatMessages = chatGameId ? await listChatMessages(chatGameId) : [];
+  const blockedDeviceIds = chatGameId ? await listBlockedDeviceIds(chatGameId) : new Set<string>();
 
   async function create(formData: FormData) {
     "use server";
@@ -39,6 +52,24 @@ export default async function AdminPage({
   async function remove(id: string) {
     "use server";
     await deleteGame(id);
+    revalidatePath("/admin");
+  }
+
+  async function removeMessage(id: string) {
+    "use server";
+    await deleteChatMessage(id);
+    revalidatePath("/admin");
+  }
+
+  async function block(gameId: string, deviceId: string) {
+    "use server";
+    await blockChatter(gameId, deviceId);
+    revalidatePath("/admin");
+  }
+
+  async function unblock(gameId: string, deviceId: string) {
+    "use server";
+    await unblockChatter(gameId, deviceId);
     revalidatePath("/admin");
   }
 
@@ -124,6 +155,9 @@ export default async function AdminPage({
               {g.choice_a_label} vs {g.choice_b_label} · {g.status}
             </span>
             <span className="flex gap-2 items-center">
+              <a href={`/admin?chat=${g.id}`} className="text-neutral-600">
+                채팅
+              </a>
               <a href={`/admin?edit=${g.id}`} className="text-neutral-600">
                 수정
               </a>
@@ -136,6 +170,50 @@ export default async function AdminPage({
           </li>
         ))}
       </ul>
+
+      {chatGame && (
+        <section className="space-y-2 border rounded-md p-2">
+          <h2 className="font-bold text-sm">
+            채팅 모더레이션 — {chatGame.date}{" "}
+            {chatGame.question ?? `${chatGame.choice_a_label} vs ${chatGame.choice_b_label}`}
+          </h2>
+          <ul className="space-y-1">
+            {chatMessages.map((m) => {
+              const isBlocked = blockedDeviceIds.has(m.device_id);
+              return (
+                <li
+                  key={m.id}
+                  className="flex justify-between items-center gap-2 border rounded-md p-2 text-xs"
+                >
+                  <span>
+                    {m.choice === "A" ? "🅰" : "🅱"} {m.nickname}: {m.content}
+                  </span>
+                  <span className="flex gap-2 items-center shrink-0">
+                    <form action={removeMessage.bind(null, m.id)}>
+                      <button type="submit" className="text-red-600">
+                        삭제
+                      </button>
+                    </form>
+                    <form
+                      action={(isBlocked ? unblock : block).bind(null, chatGame.id, m.device_id)}
+                    >
+                      <button
+                        type="submit"
+                        className={isBlocked ? "text-neutral-600" : "text-orange-600"}
+                      >
+                        {isBlocked ? "차단해제" : "차단"}
+                      </button>
+                    </form>
+                  </span>
+                </li>
+              );
+            })}
+            {chatMessages.length === 0 && (
+              <li className="text-xs text-neutral-500">채팅이 아직 없습니다.</li>
+            )}
+          </ul>
+        </section>
+      )}
     </main>
   );
 }
