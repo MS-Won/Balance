@@ -9,6 +9,33 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
+## 현재 진행 상황 (2026-07-15 갱신 — 채팅 모더레이션 7개 태스크 구현 완료, 라이브 브라우저 검증 남음)
+
+**배경**: 성장/마케팅 전략(Track A 커뮤니티 집중 발사)을 실행하기 전, 낯선 외부 트래픽에 대응할 최소 모더레이션 장치가 필요하다고 판단해 브레인스토밍 → 스펙 → 계획을 새로 만들고 실행함.
+- 스펙: `docs/superpowers/specs/2026-07-15-chat-moderation-design.md`
+- 구현 계획: `docs/superpowers/plans/2026-07-15-chat-moderation.md` (7개 태스크)
+- `superpowers:subagent-driven-development`로 7개 태스크 전부 실행 + 태스크별 리뷰(전부 clean/Approved) 통과. 커밋 범위: `31ff414`(계획 커밋)..`20b01d0`.
+
+**구현 내용**: 관리자가 채팅 메시지를 개별 삭제할 수 있고, 특정 기기(device_id)를 그 게임에 한해 차단(채팅 입력창에 "잠시 채팅을 제한합니다" 표시)할 수 있으며, 욕설이 포함된 메시지는 클라이언트+DB(CHECK 제약) 이중으로 차단된다.
+- `supabase/migrations/0013_chat_moderation.sql`: `chat_blocks` 테이블(게임별 스코프, unique(game_id, device_id)) + `chat_messages` insert 정책을 차단된 기기 거부하도록 교체 + `chat_messages_no_profanity` CHECK 제약.
+- `src/lib/profanityFilter.ts`(`containsProfanity`) — DB 제약과 동일한 용어 목록을 수동 동기화.
+- `src/hooks/useChatBlockStatus.ts` — 내 기기의 차단 여부를 실시간 구독.
+- `src/components/ChatInput.tsx` — `blocked` prop + 욕설 시 전송 차단 안내.
+- `src/app/admin/actions.ts` + `src/app/admin/page.tsx` — `/admin?chat=<game_id>`에서 게임별 채팅 목록 + 메시지 삭제 + 기기 차단/차단해제 UI (기존 관리자 CRUD는 그대로 유지 확인됨).
+
+**세션 중 발견·수정한 이슈 2건**:
+1. **검증 도구 자체의 함정**: `npx supabase db query --linked`는 `postgres` 슈퍼유저로 접속해서 RLS를 완전히 우회한다(`select current_user`로 확인). 그래서 `chat_block_check.sql`의 최초 버전은 "차단된 기기가 여전히 글을 올릴 수 있는" 실패를 제대로 못 잡았음. `set role anon;`/`reset role;`으로 실제 anon 키 트래픽과 동일한 권한 하에서 assertion을 실행하도록 스크립트를 고쳐서 해결(스크립트 상단 주석에 이유 기록됨). 이후 이 프로젝트에서 RLS 정책을 검증하는 스크립트를 새로 만들 때는 이 패턴을 참고할 것.
+2. **Task 3(`useChatBlockStatus`)에 실제 lint 에러**(`react-hooks/set-state-in-effect`)가 있었는데 그 태스크의 리뷰에서 안 걸림(리뷰어가 lint를 안 돌림). Task 7 구현 중 발견되어 별도 수정 커밋(`20b01d0`)으로 해결 — `HomeClient.tsx`의 닉네임 로딩 effect에 있던 기존 억제 패턴(`eslint-disable-next-line react-hooks/set-state-in-effect` + 이유 주석)을 그대로 따름.
+
+### 다음 세션(또는 사람)이 할 일
+1. **라이브 브라우저 검증** (서브에이전트들은 샌드박스라 실제 브라우저/두 탭 상호작용을 못 함, 코드 리뷰로만 검증됨):
+   - `/admin`에 로그인 → 게임 목록에서 "채팅" 클릭 → 메시지 [삭제] 클릭 시 그 메시지가 관리자 화면과 메인 페이지(다른 탭) 양쪽에서 실시간으로 사라지는지.
+   - 어떤 메시지의 작성자를 [차단] 클릭 → 그 기기(브라우저)의 채팅 입력창이 "잠시 채팅을 제한합니다"로 바뀌는지(실시간, ~1초 내), [차단해제] 클릭 시 다시 정상으로 돌아오는지.
+   - 욕설이 포함된 메시지를 실제로 입력해서 전송이 막히고 "부적절한 표현이 포함되어 있어요" 안내가 뜨는지.
+2. **최종 전체 브랜치 리뷰** (`superpowers:requesting-code-review`, opus 권장) — 위 브라우저 검증까지 끝난 뒤, 또는 그 결과와 무관하게 코드 자체 리뷰는 먼저 진행 가능.
+3. 그 다음 `superpowers:finishing-a-development-branch`로 머지/정리 결정.
+4. (이전 세션에서 이월, 여전히 미착수) 카카오톡 채널 실제 개설 + `NEXT_PUBLIC_KAKAO_CHANNEL_ID` 설정, Track A 커뮤니티 발사 실행.
+
 ## 현재 진행 상황 (2026-07-15 갱신 — 롤오버 레이스 버그 수정 + 성장/마케팅 기능 구현 완료)
 
 **이번 세션 1: hall_of_fame 롤오버 컷오프 레이스 버그 발견·수정.**
