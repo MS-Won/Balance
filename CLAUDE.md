@@ -9,6 +9,31 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
+## 현재 진행 상황 (2026-07-15 갱신 — 롤오버 레이스 버그 수정 + 성장/마케팅 기능 구현 완료)
+
+**이번 세션 1: hall_of_fame 롤오버 컷오프 레이스 버그 발견·수정.**
+`perform_midnight_rollover()`가 "종료된 게임" 기준을 실제 KST 오늘 날짜가 아니라 "DB에 존재하는 가장 최신 게임의 날짜"로 판단하고 있었음.
+관리자가 매일 자정 이후 수동으로 게임을 등록하는 운영 방식과, 자정 정각에 고정 실행되는 크론 사이에 레이스가 있어서
+크론이 도는 시점엔 아직 오늘 게임이 없으니 어제 게임이 계속 "현재 게임" 취급되어 집계에서 빠지고 하루 늦게 밀리는 구조였음 (매일 반복되는 버그).
+`supabase/migrations/0012_fix_rollover_cutoff.sql`로 컷오프를 `current_game.date` 대신 실제 `today`(KST)로 수정.
+회귀 테스트를 `supabase/verify/date_based_rollover_check.sql`에 추가(수정 전 실패 확인 → 마이그레이션 적용 → 재검증 통과).
+라이브 DB(usqxzkggksqoceileqbt)에 적용 완료 + 막혀있던 07-14 게임 즉시 캐치업 완료 (hall_of_fame에 반영됨, 라이브 확인함).
+커밋: `b14d01c` (마이그레이션 0012는 원래 0008로 만들었다가 이미 0008~0011이 라이브에 존재해서 0012로 리네임함 — 새 마이그레이션 만들 때 `npx supabase migration list --linked`로 최신 번호 먼저 확인할 것).
+
+**이번 세션 2: 성장/마케팅 전략 브레인스토밍 + 구현.**
+- 스펙: `docs/superpowers/specs/2026-07-15-growth-marketing-design.md` — 무트래픽·소액 광고예산·0에서 시작 전제로,
+  Track A(커뮤니티 집중 발사, 코드 아님, 운영 루틴) + Track B(카카오톡 채널 리텐션 훅) + Track B-2(공유 카드 개인화) 설계.
+- 구현 계획: `docs/superpowers/plans/2026-07-15-growth-features.md` (5개 태스크, 코드가 필요한 Track B/B-2만 포함).
+- `superpowers:subagent-driven-development`로 5개 태스크 전부 실행 + 태스크별 리뷰 + 최종 전체 브랜치 리뷰(opus, "Ready to merge") 통과.
+  커밋 범위: `7bde5c1`..`a75712a` (카카오 채널 추가 버튼 → buildShareContent → parseShareImageParams → /api/share-image 라우트 → ShareBar 연동).
+- Minor 노트(병합 차단 아님): `parseShareImageParams`가 `pct=`(빈 문자열)를 `null`이 아닌 `0`으로 파싱함 — 앱에서는 도달 불가능한 경로(수작업 URL로만 트리거 가능, 이미지 렌더링만 영향받는 코스메틱 이슈)라 그대로 둠.
+
+### 다음 세션(또는 사람)이 할 일
+1. **카카오톡 채널을 실제로 개설**하고 `NEXT_PUBLIC_KAKAO_CHANNEL_ID` 환경변수(Vercel + `.env.local`)에 채널 ID 설정 — 설정 전엔 `KakaoChannelButton`이 아무것도 렌더링 안 함(의도된 동작).
+2. **브라우저에서 실제 카카오톡 공유 버튼 클릭스루 확인** — 투표 전(일반 카드) / 투표 후(개인화된 카드: "나는 OO파! 오늘 XX%가 나와 같은 선택을 했어요") 둘 다. 서브에이전트들은 샌드박스에서 카카오 SDK를 실제로 클릭할 수 없어 코드 트레이스로만 검증함.
+3. **Track A(커뮤니티 집중 발사)와 Track B의 수동 친구톡 발송**은 코드가 아니라 운영 루틴 — 스펙 문서의 일정/채널 가이드대로 사람이 직접 실행.
+4. (선택) `parseShareImageParams`의 빈 `pct=` 엣지케이스를 고치고 싶다면 `src/lib/shareImageParams.ts`에 빈 문자열 가드 한 줄 추가 (최종 리뷰에서 제안된 수정안 있음, 우선순위 낮음).
+
 ## 현재 진행 상황 (2026-07-14 갱신 — 날짜기반 롤오버 구현·라이브 적용·검증 완료)
 
 **이번 세션: 날짜기반 롤오버 구현 계획(Task 1~3)을 `superpowers:subagent-driven-development`로 전부 실행 완료.
