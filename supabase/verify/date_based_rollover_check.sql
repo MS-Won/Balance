@@ -10,10 +10,15 @@
 -- Scenarios (all in one run):
 --   * Normal: a past game with votes+chat+endorsements is aggregated (winner A,
 --     representative = most-endorsed A message).
---   * Catch-up loop: two past games behind one current game both get aggregated.
+--   * Catch-up loop: two past games behind one current (today-dated) game both
+--     get aggregated.
 --   * No representative: a past game whose winning side has no chat gets NO
 --     hall_of_fame row but IS marked aggregated (no infinite retry).
 --   * Idempotent: a second rollover() call changes nothing.
+--   * Race (regression for the 2026-07-15 bug): only a past game exists, with
+--     NOTHING yet registered for "today" -- must still be aggregated. The
+--     cutoff must be the real KST calendar date, not "the newest existing
+--     row's date", or the outgoing game silently waits a full extra day.
 
 begin;
 
@@ -23,7 +28,8 @@ delete from balance_games;
 
 do $$
 declare
-  c_id uuid;   -- current game (newest date <= today)
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+  c_id uuid;   -- current game (dated today)
   p1_id uuid;  -- past game with a valid representative
   p0_id uuid;  -- past game whose winner side has no chat
   m1 uuid;
@@ -37,15 +43,15 @@ declare
   p0_marked timestamptz;
   c_marked timestamptz;
 begin
-  -- Current game: newest date <= today, so rollover treats it as "current"
-  -- and never aggregates it. 2000-01-10 is safely <= today.
+  -- Current game: dated today, so rollover treats it as "current" and never
+  -- aggregates it.
   insert into balance_games (date, choice_a_label, choice_b_label)
-    values ('2000-01-10', 'CUR_A', 'CUR_B') returning id into c_id;
+    values (v_today, 'CUR_A', 'CUR_B') returning id into c_id;
 
   -- Past game P1 (normal): winner A (2 A vs 1 B); A-side messages m1/m2,
   -- m1 most endorsed (2 vs 1) -> representative = winner_nick.
   insert into balance_games (date, choice_a_label, choice_b_label)
-    values ('2000-01-05', 'P1_A', 'P1_B') returning id into p1_id;
+    values (v_today - 5, 'P1_A', 'P1_B') returning id into p1_id;
   insert into votes (game_id, device_id, choice) values
     (p1_id, 'd1', 'A'), (p1_id, 'd2', 'A'), (p1_id, 'd3', 'B');
   insert into chat_messages (game_id, device_id, nickname, choice, content)
@@ -60,7 +66,7 @@ begin
   -- Past game P0 (no representative): winner A (1 A vs 0 B) but only a B-side
   -- chat message exists -> no A-side message -> no hall_of_fame row expected.
   insert into balance_games (date, choice_a_label, choice_b_label)
-    values ('2000-01-01', 'P0_A', 'P0_B') returning id into p0_id;
+    values (v_today - 10, 'P0_A', 'P0_B') returning id into p0_id;
   insert into votes (game_id, device_id, choice) values (p0_id, 'd4', 'A');
   insert into chat_messages (game_id, device_id, nickname, choice, content)
     values (p0_id, 'd4', 'lonely_b', 'B', 'only a B msg');
@@ -87,7 +93,7 @@ begin
     raise exception 'FAIL P0: expected aggregated_at set, got NULL';
   end if;
 
-  -- Current game must NOT be aggregated.
+  -- Current game (dated today) must NOT be aggregated.
   select aggregated_at into c_marked from balance_games where id = c_id;
   if c_marked is not null then
     raise exception 'FAIL current: current game was aggregated (should not be)';
@@ -107,6 +113,40 @@ begin
   end if;
 
   raise notice 'PASS: date-based rollover aggregated past games once, skipped current, idempotent';
+end;
+$$;
+
+-- Race scenario, isolated: only a past game exists, nothing registered for
+-- "today" yet. Must still be aggregated -- this is the exact bug where the
+-- admin registers each day's game manually, after the fixed-time midnight
+-- cron has already fired.
+delete from balance_games;
+
+do $$
+declare
+  v_today date := (now() at time zone 'Asia/Seoul')::date;
+  p_id uuid;
+  m1 uuid;
+  hof_count int;
+  marked timestamptz;
+begin
+  insert into balance_games (date, choice_a_label, choice_b_label)
+    values (v_today - 1, 'A', 'B') returning id into p_id;
+  insert into votes (game_id, device_id, choice) values (p_id, 'd1', 'A');
+  insert into chat_messages (game_id, device_id, nickname, choice, content)
+    values (p_id, 'd1', 'winner_nick', 'A', 'best A') returning id into m1;
+
+  perform perform_midnight_rollover();
+
+  select count(*) into hof_count from hall_of_fame where game_id = p_id;
+  select aggregated_at into marked from balance_games where id = p_id;
+
+  if hof_count <> 1 or marked is null then
+    raise exception 'FAIL race: past game not aggregated when no "today" game exists yet. hof_count=%, aggregated_at=%',
+      hof_count, marked;
+  end if;
+
+  raise notice 'PASS: race scenario aggregated the past game with no "today" row present';
 end;
 $$;
 
