@@ -87,3 +87,53 @@ export async function deleteGame(id: string) {
   const { error } = await supabase.from("balance_games").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function listChatMessages(gameId: string) {
+  await assertAdmin();
+  const supabase = getAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function listBlockedDeviceIds(gameId: string): Promise<Set<string>> {
+  await assertAdmin();
+  const supabase = getAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("chat_blocks")
+    .select("device_id")
+    .eq("game_id", gameId);
+  if (error) throw error;
+  return new Set(data.map((row) => row.device_id));
+}
+
+export async function deleteChatMessage(id: string) {
+  await assertAdmin();
+  const supabase = getAdminSupabaseClient();
+  const { error } = await supabase.from("chat_messages").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function blockChatter(gameId: string, deviceId: string) {
+  await assertAdmin();
+  const supabase = getAdminSupabaseClient();
+  const { error } = await supabase
+    .from("chat_blocks")
+    .upsert({ game_id: gameId, device_id: deviceId }, { onConflict: "game_id,device_id" });
+  if (error) throw error;
+}
+
+export async function unblockChatter(gameId: string, deviceId: string) {
+  await assertAdmin();
+  const supabase = getAdminSupabaseClient();
+  const { error } = await supabase
+    .from("chat_blocks")
+    .delete()
+    .eq("game_id", gameId)
+    .eq("device_id", deviceId);
+  if (error) throw error;
+}
