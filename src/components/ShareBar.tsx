@@ -3,6 +3,8 @@
 import Script from "next/script";
 import { useState } from "react";
 import { getTodayKST } from "@/lib/kstDate";
+import { buildShareContent } from "@/lib/shareContent";
+import type { VoteTally } from "@/lib/voteTally";
 
 // KakaoTalk (and most messengers) cache a URL's link preview the first time
 // it's scraped. Appending today's date makes each day's share a "new" URL,
@@ -34,7 +36,19 @@ declare global {
   }
 }
 
-export function ShareBar({ question }: { question: string | null }) {
+export function ShareBar({
+  question,
+  aLabel,
+  bLabel,
+  myChoice,
+  tally,
+}: {
+  question: string | null;
+  aLabel: string;
+  bLabel: string;
+  myChoice: "A" | "B" | null;
+  tally: VoteTally;
+}) {
   const [copied, setCopied] = useState(false);
   const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
 
@@ -44,12 +58,17 @@ export function ShareBar({ question }: { question: string | null }) {
       return;
     }
     const url = shareUrl();
+    const personalized = buildShareContent(myChoice, tally, aLabel, bLabel);
+    const imageUrl = personalized
+      ? new URL(`/api/share-image?${personalized.imageQuery}`, url).toString()
+      : new URL("/opengraph-image", url).toString();
+
     window.Kakao.Share.sendDefault({
       objectType: "feed",
       content: {
         title: "오늘의 밸런스",
-        description: question ?? "오늘의 밸런스 게임에 참여해보세요",
-        imageUrl: new URL("/opengraph-image", url).toString(),
+        description: personalized?.description ?? question ?? "오늘의 밸런스 게임에 참여해보세요",
+        imageUrl,
         link: { webUrl: url, mobileWebUrl: url },
       },
     });

@@ -83,7 +83,13 @@ export function HomeClient() {
             disabled={!myChoice || !nickname}
             onSend={(content) => myChoice && sendMessage(content, myChoice)}
           />
-          <ShareBar question={game.question} />
+          <ShareBar
+            question={game.question}
+            aLabel={game.choice_a_label}
+            bLabel={game.choice_b_label}
+            myChoice={myChoice}
+            tally={tally}
+          />
           <KakaoChannelButton />
         </>
       )}
