@@ -461,6 +461,15 @@ body {
   background: var(--line);
   color: var(--ink);
 }
+.share.channel {
+  background: #1a1a1a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+}
 
 /* hall of fame */
 .hof .title {

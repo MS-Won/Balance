@@ -13,6 +13,7 @@ import { useEndorsements } from "@/hooks/useEndorsements";
 import { ChatFeed } from "@/components/ChatFeed";
 import { ChatInput } from "@/components/ChatInput";
 import { ShareBar } from "@/components/ShareBar";
+import { KakaoChannelButton } from "@/components/KakaoChannelButton";
 import {
   computeRepresentativeOpinions,
   type RepresentativeOpinionMessage,
@@ -83,6 +84,7 @@ export function HomeClient() {
             onSend={(content) => myChoice && sendMessage(content, myChoice)}
           />
           <ShareBar question={game.question} />
+          <KakaoChannelButton />
         </>
       )}
 
