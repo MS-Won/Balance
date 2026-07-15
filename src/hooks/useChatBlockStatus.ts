@@ -9,6 +9,8 @@ export function useChatBlockStatus(gameId: string | undefined): boolean {
 
   useEffect(() => {
     if (!gameId) {
+      // Reset blocked state when game ends (gameId becomes undefined)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBlocked(false);
       return;
     }
