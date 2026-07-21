@@ -9,6 +9,33 @@
 - 진행 방식: `superpowers:subagent-driven-development` 스킬로, 태스크마다 구현 서브에이전트 → 리뷰 서브에이전트를 붙여서 진행 중.
 - 진행 원장: `.superpowers/sdd/progress.md` (완료된 태스크와 커밋 범위 기록. `.gitignore`에 의해 이 파일 자체는 git에는 안 올라가므로, 최신 상태는 아래 "현재 진행 상황" 섹션과 `git log`를 기준으로 판단할 것)
 
+## 현재 진행 상황 (2026-07-21 갱신 — 마케팅 런칭 착수: 카카오 채널·도메인 전환 완료, 채널 버튼 미노출 트러블슈팅 중 이 PC 네트워크로 막힘)
+
+**배경**: MVP 라이브 테스트 완료, 실제 URL 홍보 시작 단계. `docs/superpowers/specs/2026-07-15-growth-marketing-design.md` 기준 실행 체크리스트를
+`docs/superpowers/checklists/2026-07-21-launch-marketing-checklist.md`로 만들어 Phase 0(인프라·계정 시딩)부터 진행 중.
+
+**이번 세션에 완료한 것**:
+- 카카오톡 채널 개설 (채널 ID `_xbEYfX`, 검색용 ID·카테고리(미디어/콘텐츠)·55자 이내 소개문 확정).
+- 도메인을 `balance-game-mvp.vercel.app` → **`todaybalance.vercel.app`**로 전환. Vercel Domains 탭에서 "Valid Configuration" + Production 자동추종 확인됨(도메인 자체는 정상).
+  `src/app/layout.tsx`의 `metadataBase`도 새 도메인으로 수정·커밋·푸시(`dd066fe`).
+- 인스타그램 계정을 비즈니스 계정으로 전환 + 페이스북 페이지("오늘의 밸런스") 연결 완료 (추후 Meta Graph/Threads API 심사의 선행조건, `2026-07-17-social-auto-posting-design.md` 참고).
+- 체크리스트 문서에 위 진행상황 반영·커밋·푸시(`bd16a19`).
+- `.env.local`과 Vercel 프로젝트 환경변수(Production)에 `NEXT_PUBLIC_KAKAO_CHANNEL_ID=_xbEYfX` 설정
+  (중간에 실수로 `NEXT_PUBLIC_KAKAO_JS_KEY`의 Value 칸에 잘못 입력했다가 발견·복구함 — 새 변수는 반드시 "Add Environment Variable"로 별도 추가해야 하고,
+  기존 변수의 Value 칸을 재활용하면 안 된다는 점 기록해둠).
+
+**미해결 이슈 — 카카오 채널 버튼(`src/components/KakaoChannelButton.tsx`, `HomeClient.tsx:96`)이 라이브 사이트에 계속 안 보임**:
+- 증상: 투표 카드·채팅·공유(ShareBar, 카카오톡 공유/링크 복사)는 정상 표시되는데, 그 바로 아래 카카오 채널 버튼만 안 뜸. 컴포넌트 로직은 `channelId`가 falsy면 `null` 반환하는 것뿐이라, 이 증상은 해당 빌드의 클라이언트 번들에 `NEXT_PUBLIC_KAKAO_CHANNEL_ID`가 실제로 안 박혔다는 뜻으로 추정됨.
+- 확인 완료(문제 아님): Vercel Domains 정상, env var가 Production 스코프로 올바른 이름/값(추정)으로 존재, "Sensitive" 플래그는 원인 아님(다른 이미 동작 중인 `NEXT_PUBLIC_SUPABASE_*` 변수들도 전부 Sensitive+Production인데 정상 동작 중이므로).
+- 여러 차례 캐시 없이 재배포(Redeploy, Use existing Build Cache 해제)했음에도 미해결.
+- **확인 못 한 것**: 문제의 배포(Deployments 탭 최상단) 상세 페이지의 "Environment Variables" 섹션에 `NEXT_PUBLIC_KAKAO_CHANNEL_ID`가 실제로 포함되어 있는지까지는 스크린샷으로 확인 못함 — 사용자가 매번 배포 목록/환경변수 목록 화면을 보내서 정확한 배포-상세 화면 캡처가 아직 없음.
+- **이 PC 네트워크 제약으로 직접 검증 불가**: `curl https://todaybalance.vercel.app` 및 WebFetch 둘 다 연결 자체가 타임아웃됨(DNS는 resolve됨, TLS 핸드셰이크 전에 막힘). 기존에 기록된 이 PC의 HTTPS 가로채기 인증서 이슈(`ADD` 루트 인증서)와 별개로 이번엔 순수 연결 실패라 원인 미상 — 방화벽/네트워크 정책으로 해당 IP 대역이 막혀있을 가능성. **집 PC 등 다른 네트워크에서 이어서 검증할 것.**
+
+### 다음 세션(다른 PC 포함)이 할 일
+1. 네트워크 제약 없는 곳에서 `todaybalance.vercel.app` 접속 → 카카오 채널 버튼이 보이는지부터 확인 (의외로 이 PC만의 네트워크 문제였고 실제로는 이미 정상일 가능성 있음).
+2. 여전히 안 보이면 Vercel Deployments 탭 → 최신 배포 클릭 → "Environment Variables" 섹션에 `NEXT_PUBLIC_KAKAO_CHANNEL_ID` 포함 여부 확인. 포함되어 있는데도 안 보이면 코드(`KakaoChannelButton.tsx`, `HomeClient.tsx`)를 다시 점검(다른 원인 가능성 — 예: 해당 배포가 실제로 Production 도메인에 alias된 것이 맞는지, 또는 Edge 캐시 문제인지).
+3. 해결되면 체크리스트(`docs/superpowers/checklists/2026-07-21-launch-marketing-checklist.md`) Phase 0 나머지 항목(source 파라미터 확정, 커뮤니티 계정 신규가입, Meta 개발자 앱/API 심사 신청)으로 진행.
+
 ## 현재 진행 상황 (2026-07-15 갱신 — 채팅 모더레이션 7개 태스크 구현 완료, 라이브 브라우저 검증 남음)
 
 **배경**: 성장/마케팅 전략(Track A 커뮤니티 집중 발사)을 실행하기 전, 낯선 외부 트래픽에 대응할 최소 모더레이션 장치가 필요하다고 판단해 브레인스토밍 → 스펙 → 계획을 새로 만들고 실행함.

@@ -41,7 +41,7 @@ yarn-error.log*
 .superpowers/
 
 # claude code worktrees (nested under the main checkout)
-.claude/
+.claude/worktrees/
 
 # typescript
 *.tsbuildinfo
