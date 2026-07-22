@@ -10,7 +10,7 @@
 - [x] **카카오톡 채널 개설** (채널 ID `_xbEYfX`, 검색용 ID/카테고리/소개문 확정 완료)
 - [x] 배포된 실제 URL 확정 — `todaybalance.vercel.app` (구 `balance-game-mvp.vercel.app`에서 변경, `src/app/layout.tsx`의 `metadataBase`도 반영·커밋·푸시 완료, 커밋 `dd066fe`)
 - [x] `NEXT_PUBLIC_KAKAO_CHANNEL_ID`를 `.env.local`에 설정 완료 (`_xbEYfX`)
-- [ ] `NEXT_PUBLIC_KAKAO_CHANNEL_ID`를 **Vercel 프로젝트 환경변수**에도 설정 → 재배포해서 `KakaoChannelButton`이 실제 배포본에서 렌더링되는지 확인 (로컬 `.env.local`만으론 프로덕션에 반영 안 됨)
+- [x] `NEXT_PUBLIC_KAKAO_CHANNEL_ID`를 **Vercel 프로젝트 환경변수**에도 설정 → 재배포해서 `KakaoChannelButton`이 실제 배포본에서 렌더링되는지 확인 완료 (2026-07-23, 배포 번들에 `_xbEYfX` 인라인 + 실제 브라우저 DOM 렌더 확인. 페이지 맨 아래에 위치)
 - [x] 인스타그램 비즈니스 계정 전환 + 페이스북 페이지("오늘의 밸런스") 연결 완료 — 추후 Meta API 심사(자동포스팅 스펙 선행조건)를 위한 기반
 - [ ] **source 파라미터 규칙**: `?src=insta_story`, `?src=insta_feed`, `?src=kakao`, `?src=fmkorea`, `?src=dc`, `?src=natepan` 형식(소문자, 언더바 없이)으로 확정. 발사할 때마다 반드시 붙이기.
 - [ ] 커뮤니티 계정 신규 가입 시작 — **홍보 목적이라는 티 내지 말고 일반 활동으로 시작** (에펨코리아/디시/네이트판 등은 등업 조건·신규계정 도배 감지가 있어서, 가입 직후 홍보 글부터 올리면 삭제·차단 위험이 큼). 이번 주엔 그냥 일반 댓글/눈팅으로 계정을 자연스럽게 만들어두는 것만 목표.
